@@ -19,8 +19,21 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        Button playButton = findViewById(R.id.play_button);
-        playButton.setOnClickListener(view -> {
+        Button LoginButton = findViewById(R.id.btnLogin);
+        Button RegisterButton = findViewById(R.id.btnRegister);
+
+        LoginButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+        });
+
+        RegisterButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
+            startActivity(intent);
+        });
+
+        Button PlayButton = findViewById(R.id.play_button);
+        PlayButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, GameListActivity.class);
             startActivity(intent);
         });

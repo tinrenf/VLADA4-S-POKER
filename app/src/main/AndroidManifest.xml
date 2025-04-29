@@ -28,6 +28,12 @@
         <activity
             android:name=".GameActivity" >
         </activity>
+        <activity
+            android:name=".RegisterActivity">
+        </activity>
+        <activity
+            android:name=".LoginActivity">
+        </activity>
     </application>
 
 </manifest>
