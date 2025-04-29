@@ -57,7 +57,7 @@ public class GameActivity extends AppCompatActivity {
         updatePlayerInfo();
     }
 
-    private void posSmallBlind() {
+    private void postSmallBlind() {
         playerChips -= small_blind;
     }
 
