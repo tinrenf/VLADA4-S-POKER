@@ -33,7 +33,7 @@ public class LoginActivity extends AppCompatActivity {
             mAuth.signInWithEmailAndPassword(e, p)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            startActivity(new Intent(this, GameListActivity.class));
+                            startActivity(new Intent(this, MainActivity.class));
                             finish();
                         } else {
                             Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();

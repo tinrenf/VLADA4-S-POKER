@@ -34,7 +34,7 @@ public class RegisterActivity extends AppCompatActivity {
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             Toast.makeText(this, "Регистрация успешна", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(this, GameListActivity.class));
+                            startActivity(new Intent(this, MainActivity.class));
                             finish();
                         } else {
                             Toast.makeText(this, "Ошибка: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
