@@ -9,8 +9,9 @@ public class GameActivity extends AppCompatActivity {
 
     private TextView playerInfo;
     private int playerChips = 1000; // Стартовые фишки
-    int blind = 100;
-    int cur_rate = blind;
+    int big_blind = 100;
+    int small_blind = big_blind / 2;
+    int cur_rate = big_blind;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,9 +52,13 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void postBigBlind() {
-        playerChips -= blind;
-        cur_rate = blind;
+        playerChips -= big_blind;
+        cur_rate = big_blind;
         updatePlayerInfo();
+    }
+
+    private void posSmallBlind() {
+        playerChips -= small_blind;
     }
 
     private void updatePlayerInfo() {
