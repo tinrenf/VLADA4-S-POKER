@@ -27,17 +27,17 @@ public class RegisterActivity extends AppCompatActivity {
             String e = email.getText().toString().trim();
             String p = password.getText().toString().trim();
             if (e.isEmpty() || p.length() < 6) {
-                Toast.makeText(this, "Введите корректный email и пароль ≥6 символов", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Enter your email and password >=6 symbols", Toast.LENGTH_SHORT).show();
                 return;
             }
             mAuth.createUserWithEmailAndPassword(e, p)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            Toast.makeText(this, "Регистрация успешна", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Successful registration", Toast.LENGTH_SHORT).show();
                             startActivity(new Intent(this, MainActivity.class));
                             finish();
                         } else {
-                            Toast.makeText(this, "Ошибка: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
         });
