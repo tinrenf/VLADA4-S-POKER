@@ -85,23 +85,22 @@ public class GameListActivity extends AppCompatActivity {
                     return;
                 }
 
-                Log.d(TAG, "onEvent: " + snapshots.size() + " games found.");  // Логируем количество игр
+                Log.d(TAG, "onEvent: " + snapshots.size() + " games found.");
 
-                gameList.clear();  // Очищаем старый список
+                gameList.clear();
 
-                // Проходим по всем документам в snapshots
                 for (DocumentSnapshot doc : snapshots.getDocuments()) {
-                    Game game = doc.toObject(Game.class);  // Преобразуем документ в объект Game
-                    if (game != null && doc.contains("timestamp")) {  // Проверяем наличие поля timestamp
-                        game.setId(doc.getId());  // Устанавливаем ID игры
-                        gameList.add(game);  // Добавляем игру в список
-                        Log.d(TAG, "Game added: " + game.getId());  // Логируем ID игры
+                    Game game = doc.toObject(Game.class);
+                    if (game != null && doc.contains("timestamp")) {
+                        game.setId(doc.getId());
+                        gameList.add(game);
+                        Log.d(TAG, "Game added: " + game.getId());
                     } else {
-                        Log.w(TAG, "Game without timestamp: " + doc.getId());  // Логируем, если нет поля timestamp
+                        Log.w(TAG, "Game without timestamp: " + doc.getId());
                     }
                 }
 
-                adapter.notifyDataSetChanged();  // Обновляем адаптер
+                adapter.notifyDataSetChanged();
             }
         });
     }

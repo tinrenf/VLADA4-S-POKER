@@ -12,7 +12,7 @@ import com.google.firebase.auth.FirebaseUser;
 public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private EditText email, password;
-    private Button btnLogin;
+    private Button btnLogin, btnLoginToReg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +23,7 @@ public class LoginActivity extends AppCompatActivity {
         email = findViewById(R.id.email);
         password = findViewById(R.id.password);
         btnLogin = findViewById(R.id.btnLogin);
+        btnLoginToReg = findViewById(R.id.btnLoginToReg);
 
         btnLogin.setOnClickListener(v -> {
             String e = email.getText().toString().trim();
@@ -45,6 +46,11 @@ public class LoginActivity extends AppCompatActivity {
                             Toast.makeText(LoginActivity.this, "Authentication failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
+        });
+
+        btnLoginToReg.setOnClickListener(v -> {
+            Intent intent = new Intent(this, RegisterActivity.class);
+            startActivity(intent);
         });
     }
 }

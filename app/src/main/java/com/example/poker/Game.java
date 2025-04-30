@@ -18,7 +18,6 @@ public class Game { //Эта штука для датабазы firebase
         this.timestamp = timestamp;
     }
 
-    // Пустой конструктор обязательно нужен для deserialization
     public Game() { }
 
     // Геттеры и сеттеры
