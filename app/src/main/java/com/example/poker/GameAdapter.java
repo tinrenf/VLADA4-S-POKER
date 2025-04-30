@@ -21,11 +21,10 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
     @NonNull
     @Override
     public GameViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Используем встроенный simple_list_item_1 для отображения текста
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(android.R.layout.simple_list_item_1, parent, false);
         return new GameViewHolder(view);
-    }
+    }//Не ебу что это хуйня делает, мне чат гпт так сказал
 
     @Override
     public void onBindViewHolder(@NonNull GameViewHolder holder, int position) {

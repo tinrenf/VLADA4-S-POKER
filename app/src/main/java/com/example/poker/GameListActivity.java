@@ -16,11 +16,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.*;
 
@@ -43,10 +43,20 @@ public class GameListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_list);
 
-        // Инициализация Firebase
+        //Firebase штучки
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
         gamesRef = db.collection("games");
+
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (currentUser != null) {
+            String uid = currentUser.getUid();
+            String email = currentUser.getEmail();
+            Log.d("FIREBASE_USER", "Пользователь вошёл: UID = " + uid + ", Email = " + email);
+        } else {
+            Log.d("FIREBASE_USER", "Пользователь НЕ вошёл в систему");
+        }
 
         // UI элементы
         recyclerView = findViewById(R.id.game_list_recycler_view);
@@ -86,28 +96,34 @@ public class GameListActivity extends AppCompatActivity {
     }
 
     private void createNewGame() {
-        String userId = auth.getCurrentUser().getUid();
-        Map<String,Object> gameData = new HashMap<>();
-        gameData.put("creatorId", userId);
-        gameData.put("timestamp", FieldValue.serverTimestamp());
-        //можно добавлять другие параметры
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return;
 
-        gamesRef
-                .add(gameData)
-                .addOnSuccessListener(docRef -> {
-                    Toast.makeText(this,
-                            "Game created",
-                            Toast.LENGTH_SHORT).show();
-                    // опционально: сразу открыть эту игру
-                    Intent intent = new Intent(GameListActivity.this, GameActivity.class);
-                    intent.putExtra("gameId", docRef.getId());
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        Map<String, Object> game = new HashMap<>();
+        game.put("hostId", currentUser.getUid());
+
+        List<String> playerIds = new ArrayList<>();
+        playerIds.add(currentUser.getUid());
+        game.put("playerIds", playerIds);
+
+        game.put("maxPlayers", 5);
+        game.put("status", "waiting");
+
+        db.collection("games")
+                .add(game)
+                .addOnSuccessListener(documentReference -> {
+                    Log.d("CreateGame", "Game created with ID: " + documentReference.getId());
+                    Toast.makeText(this, "Game created", Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(GameListActivity.this, GameActivity.class);//Переход в GameActivity
+                    intent.putExtra("gameId", documentReference.getId()); // передаем ID игры
                     startActivity(intent);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error creating game", e);
-                    Toast.makeText(this,
-                            "Failed to create game: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                    Log.w("CreateGame", "Error adding game", e);
+                    Toast.makeText(this, "Error creating game", Toast.LENGTH_SHORT).show();
                 });
     }
 }
