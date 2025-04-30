@@ -41,14 +41,13 @@ public class RegisterActivity extends AppCompatActivity {
                     if (user != null) {
                         String uid = user.getUid();
                         String emailRegistered = user.getEmail();
-                        Log.d("REGISTER", "Пользователь зарегистрирован. UID = " + uid + ", Email = " + emailRegistered);
+                        Log.d("REGISTER", "User registered. UID = " + uid + ", Email = " + emailRegistered);
 
                         FirebaseFirestore db = FirebaseFirestore.getInstance();
                         Map<String, Object> userData = new HashMap<>();
                         userData.put("email", emailRegistered);
                         userData.put("password", password);
                         db.collection("users").document(uid).set(userData);
-
                     }
 
                     Toast.makeText(this, "Successful registration", Toast.LENGTH_SHORT).show();

@@ -21,6 +21,8 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FieldValue;
+
 
 import java.util.*;
 
@@ -73,26 +75,35 @@ public class GameListActivity extends AppCompatActivity {
 
     private void listenForGames() {
         gamesRef.orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener(new EventListener<QuerySnapshot>() {
-                    @Override
-                    public void onEvent(@Nullable QuerySnapshot snapshots, @Nullable FirebaseFirestoreException e) {
-                        if (e != null) {
-                            Log.w(TAG, "Listen failed.", e);
-                            Toast.makeText(GameListActivity.this,
-                                    "Error loading games: " + e.getMessage(),
-                                    Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        gameList.clear();
-                        for (DocumentSnapshot doc : snapshots.getDocuments()) {
-                            Game game = doc.toObject(Game.class);
-                            if (game != null) {
-                                game.setId(doc.getId());
-                                gameList.add(game);
-                            }
-                        }
-                        adapter.notifyDataSetChanged();
+            @Override
+            public void onEvent(@Nullable QuerySnapshot snapshots, @Nullable FirebaseFirestoreException e) {
+                if (e != null) {
+                    Log.w(TAG, "Listen failed.", e);
+                    Toast.makeText(GameListActivity.this,
+                            "Error loading games: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                Log.d(TAG, "onEvent: " + snapshots.size() + " games found.");  // Логируем количество игр
+
+                gameList.clear();  // Очищаем старый список
+
+                // Проходим по всем документам в snapshots
+                for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                    Game game = doc.toObject(Game.class);  // Преобразуем документ в объект Game
+                    if (game != null && doc.contains("timestamp")) {  // Проверяем наличие поля timestamp
+                        game.setId(doc.getId());  // Устанавливаем ID игры
+                        gameList.add(game);  // Добавляем игру в список
+                        Log.d(TAG, "Game added: " + game.getId());  // Логируем ID игры
+                    } else {
+                        Log.w(TAG, "Game without timestamp: " + doc.getId());  // Логируем, если нет поля timestamp
                     }
-                });
+                }
+
+                adapter.notifyDataSetChanged();  // Обновляем адаптер
+            }
+        });
     }
 
     private void createNewGame() {
@@ -110,6 +121,7 @@ public class GameListActivity extends AppCompatActivity {
 
         game.put("maxPlayers", 5);
         game.put("status", "waiting");
+        game.put("timestamp", FieldValue.serverTimestamp());
 
         db.collection("games")
                 .add(game)

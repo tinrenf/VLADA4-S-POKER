@@ -64,14 +64,13 @@
 
     <!-- Игрок -->
 
-    <!-- Кнопки действий -->
     <TextView
         android:id="@+id/player5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginBottom="16dp"
-        android:text="Player 0"
+        android:text="Player 5"
         android:textColor="@android:color/white" />
 
     <TextView
@@ -83,6 +82,7 @@
         android:textColor="@android:color/white"
         android:textSize="24sp" />
 
+    <!-- Кнопки действий -->
     <Button
         android:id="@+id/start_button"
         android:layout_width="wrap_content"
@@ -120,5 +120,4 @@
             android:layout_weight="1"
             android:text="Raise" />
     </LinearLayout>
-    <!-- Кнопка Start -->
 </LinearLayout>

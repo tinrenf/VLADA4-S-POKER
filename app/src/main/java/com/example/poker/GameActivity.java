@@ -10,9 +10,10 @@ import android.util.Log;
 import java.util.*;
 
 public class GameActivity extends AppCompatActivity {
+    private TextView playerInfo;
+    private TextView player1, player2, player3, player4, player5;
     private static final String TAG = "GameActivity";
     private FirebaseFirestore db;
-    private TextView playerInfo;
     private int playerChips = 1000; // Стартовые фишки
     int big_blind = 100;
     int small_blind = big_blind / 2;
@@ -23,10 +24,14 @@ public class GameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_game);
 
         playerInfo = findViewById(R.id.player_info);
+        player1 = findViewById(R.id.player1);
+        player2 = findViewById(R.id.player2);
+        player3 = findViewById(R.id.player3);
+        player4 = findViewById(R.id.player4);
+        player5 = findViewById(R.id.player5);
 
         db = FirebaseFirestore.getInstance();
 
-        // Получаем ID игры из Intent
         String gameId = getIntent().getStringExtra("gameId");
         if (gameId != null) {
             // Загружаем данные о игре
@@ -37,6 +42,7 @@ public class GameActivity extends AppCompatActivity {
         Button raiseButton = findViewById(R.id.button_raise);
         Button foldButton = findViewById(R.id.button_fold);
 
+        //CALL
         callButton.setOnClickListener(v -> {
             if (cur_rate <= playerChips) {
                 playerChips -= cur_rate;
@@ -46,6 +52,7 @@ public class GameActivity extends AppCompatActivity {
             }
         });
 
+        //RAISE
         raiseButton.setOnClickListener(v -> {
             if (playerChips >= cur_rate * 2) {
                 cur_rate *= 2;
@@ -61,7 +68,7 @@ public class GameActivity extends AppCompatActivity {
             playerInfo.setText("You folded!");
         });
 
-        // Установить большой блайнд при начале игры
+        //Установка блайндов
         postBigBlind();
     }
 
@@ -86,10 +93,24 @@ public class GameActivity extends AppCompatActivity {
                     if (documentSnapshot.exists()) {
                         Game game = documentSnapshot.toObject(Game.class);
                         Log.d(TAG, "Game details: " + game);
+
+                        //Список игроков
+                        if (game != null && game.getPlayerIds() != null) {
+                            List<String> playerIds = game.getPlayerIds();
+                            displayPlayerIds(playerIds);
+                        }
                     } else {
                         Log.w(TAG, "Game not found");
                     }
                 })
                 .addOnFailureListener(e -> Log.w(TAG, "Error getting game details", e));
+    }
+
+    private void displayPlayerIds(List<String> playerIds) {
+        TextView[] playerViews = {player5, player1, player2, player3, player4};
+
+        for (int i = 1; i <= playerIds.size() && i <= playerViews.length; i++) {
+            playerViews[i - 1].setText("Player " + i + ": " + playerIds.get(i - 1));
+        }
     }
 }
