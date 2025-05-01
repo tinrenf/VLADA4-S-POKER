@@ -10,6 +10,7 @@ import androidx.core.view.WindowInsetsCompat;
 import android.content.Intent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
         Button LoginButton = findViewById(R.id.btnLogin);
         Button RegisterButton = findViewById(R.id.btnRegister);
+        Button logoutButton = findViewById(R.id.logout_button);
 
         LoginButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -42,6 +44,14 @@ public class MainActivity extends AppCompatActivity {
         RegisterButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
             startActivity(intent);
+        });
+
+        logoutButton.setOnClickListener(v -> {
+            FirebaseAuth.getInstance().signOut();
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            Toast.makeText(MainActivity.this, "Вы вышли из аккаунта", Toast.LENGTH_SHORT).show();
         });
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
