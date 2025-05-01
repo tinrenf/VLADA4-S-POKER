@@ -89,6 +89,13 @@ public class GameActivity extends AppCompatActivity {
         leaveGame();
     }
 
+    protected void onStop() {
+        super.onStop();
+        Intent intent = new Intent(GameActivity.this, MainActivity.class);
+        leaveGame();
+        startActivity(intent);
+    }//Кажется OnStop работает даже в случае когда приложение сворачивается. Пока так нужно, чтобы не было дохуя игр
+
     private void leaveGame() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) return;
