@@ -1,5 +1,6 @@
 package com.example.poker;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -10,7 +11,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
-
+import android.view.View;
 
 import android.util.Log;
 import java.util.*;
@@ -38,10 +39,13 @@ public class GameActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
+        Button startButton = findViewById(R.id.start_button);
+
         String gameId = getIntent().getStringExtra("gameId");
         if (gameId != null) {
             // Загружаем данные о игре
             loadGameDetails(gameId);
+
         }
 
         Button callButton = findViewById(R.id.button_call);
@@ -85,6 +89,13 @@ public class GameActivity extends AppCompatActivity {
         leaveGame();
     }
 
+    protected void onStop() {
+        super.onStop();
+        Intent intent = new Intent(GameActivity.this, MainActivity.class);
+        leaveGame();
+        startActivity(intent);
+    }//Кажется OnStop работает даже в случае когда приложение сворачивается. Пока так нужно, чтобы не было дохуя игр
+
     private void leaveGame() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) return;
@@ -110,7 +121,6 @@ public class GameActivity extends AppCompatActivity {
                 return;
             }
 
-            // Обновляем playerIds и при необходимости creatorID
             Map<String, Object> updates = new HashMap<>();
             updates.put("playerIds", playerIds);
 
@@ -151,7 +161,16 @@ public class GameActivity extends AppCompatActivity {
                         Game game = documentSnapshot.toObject(Game.class);
                         Log.d(TAG, "Game details: " + game);
 
-                        //Список игроков
+                        String creatorID = documentSnapshot.getString("creatorID");
+                        Button startButton = findViewById(R.id.start_button);
+                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                        if (creatorID != null && user != null && creatorID.equals(user.getUid())) {
+                            startButton.setVisibility(View.VISIBLE);
+                        } else {
+                            startButton.setVisibility(View.GONE);
+                        }
+
                         if (game != null && game.getPlayerIds() != null) {
                             List<String> playerIds = game.getPlayerIds();
                             displayPlayerIds(playerIds);
