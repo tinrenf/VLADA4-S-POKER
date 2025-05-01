@@ -25,6 +25,12 @@ public class GameActivity extends AppCompatActivity {
     int big_blind = 100;
     int small_blind = big_blind / 2;
     int cur_rate = big_blind;
+    private TextView[] holeCardViews;
+    private TextView[] playerViews;
+    private List<String> playerIds = new ArrayList<>();
+    private Button startButton;
+    private List<String> playerNames = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,56 +38,39 @@ public class GameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_game);
 
         playerInfo = findViewById(R.id.player_info);
-        player1 = findViewById(R.id.player1);
-        player2 = findViewById(R.id.player2);
-        player3 = findViewById(R.id.player3);
-        player4 = findViewById(R.id.player4);
-        player5 = findViewById(R.id.player5);
+        playerViews = new TextView[]{findViewById(R.id.player5),
+                findViewById(R.id.player1_name),
+                findViewById(R.id.player2_name),
+                findViewById(R.id.player3_name),
+                findViewById(R.id.player4_name)
+        };
+
+        holeCardViews = new TextView[]{
+                findViewById(R.id.cards_player5),
+                findViewById(R.id.cards_player1),
+                findViewById(R.id.cards_player2),
+                findViewById(R.id.cards_player3),
+                findViewById(R.id.cards_player4)
+        };
 
         db = FirebaseFirestore.getInstance();
 
-        Button startButton = findViewById(R.id.start_button);
-
-        String gameId = getIntent().getStringExtra("gameId");
-        if (gameId != null) {
-            // Загружаем данные о игре
-            loadGameDetails(gameId);
-
-        }
-
+        startButton = findViewById(R.id.start_button);
         Button callButton = findViewById(R.id.button_call);
         Button raiseButton = findViewById(R.id.button_raise);
-        Button foldButton = findViewById(R.id.button_fold);
+        Button foldButton = findViewById(R.id.button_fold); /**КНОПКИ**/
 
-        //CALL
-        callButton.setOnClickListener(v -> {
-            if (cur_rate <= playerChips) {
-                playerChips -= cur_rate;
-                updatePlayerInfo();
-            } else {
-                playerInfo.setText("Not enough chips");
+        String gameId = getIntent().getStringExtra("gameId");
+        loadGameDetails(gameId);
+
+        startButton.setOnClickListener(v -> {
+            Map<String, List<Card>> holeCards = PreFlop.deal(playerIds);
+            for (int i = 0; i < playerIds.size() && i < holeCardViews.length; i++) {
+                List<Card> hand = holeCards.get(playerIds.get(i));
+                holeCardViews[i].setText(hand.get(0).toString() + "  " + hand.get(1).toString());
             }
-        });
-
-        //RAISE
-        raiseButton.setOnClickListener(v -> {
-            if (playerChips >= cur_rate * 2) {
-                cur_rate *= 2;
-                playerChips -= cur_rate;
-                updatePlayerInfo();
-            } else {
-                playerInfo.setText("Not enough chips");
-            }
-        });
-
-        //FOLD
-        foldButton.setOnClickListener(v -> {
-            // Пока просто текст
-            playerInfo.setText("You folded!");
-        });
-
-        //Установка блайндов
-        postBigBlind();
+            startButton.setVisibility(View.GONE);
+        });//ПРЕ-ФЛОП
     }
 
     @Override
@@ -92,7 +81,7 @@ public class GameActivity extends AppCompatActivity {
 
     protected void onStop() {
         super.onStop();
-        Intent intent = new Intent(GameActivity.this, MainActivity.class);
+        Intent intent = new Intent(GameActivity.this, GameListActivity.class);
         leaveGame();
         startActivity(intent);
     }//Кажется OnStop работает даже в случае когда приложение сворачивается. Пока так нужно, чтобы не было дохуя игр
@@ -109,7 +98,7 @@ public class GameActivity extends AppCompatActivity {
         gameRef.get().addOnSuccessListener(snapshot -> {
             if (!snapshot.exists()) return;
 
-            List<String> playerIds = (List<String>) snapshot.get("playerIds");
+            playerIds = (List<String>) snapshot.get("playerIds");
             String creatorID = snapshot.getString("creatorID");
 
             if (playerIds == null) playerIds = new ArrayList<>();
@@ -131,12 +120,6 @@ public class GameActivity extends AppCompatActivity {
                 updates.put("creatorID", newcreatorID);
                 Log.d("GameExit", "Хост передан игроку: " + newcreatorID);
             }
-
-            gameRef.update(updates)
-                    .addOnSuccessListener(aVoid ->
-                            Log.d("GameExit", "Игрок вышел, обновлены playerIds и creatorID"))
-                    .addOnFailureListener(e ->
-                            Log.e("GameExit", "Ошибка обновления: " + e.getMessage()));
         });
     }
 
@@ -156,54 +139,49 @@ public class GameActivity extends AppCompatActivity {
 
     private void loadGameDetails(String gameId) {
         db.collection("games").document(gameId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        Game game = documentSnapshot.toObject(Game.class);
-                        Log.d(TAG, "Game details: " + game);
-
-                        String creatorID = documentSnapshot.getString("creatorID");
-                        Button startButton = findViewById(R.id.start_button);
-                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
-                        if (creatorID != null && user != null && creatorID.equals(user.getUid())) {
-                            startButton.setVisibility(View.VISIBLE);
-                        } else {
-                            startButton.setVisibility(View.GONE);
-                        }
-
-                        if (game != null && game.getPlayerIds() != null) {
-                            List<String> playerIds = game.getPlayerIds();
-                            displayPlayerIds(playerIds);
-                        }
-                    } else {
-                        Log.w(TAG, "Game not found");
+                .addSnapshotListener((docSnapshot, error) -> {
+                    if (error != null || docSnapshot == null || !docSnapshot.exists()) {
+                        Log.w(TAG, "Listen failed or document missing", error);
+                        return;
                     }
-                })
-                .addOnFailureListener(e -> Log.w(TAG, "Error getting game details", e));
+
+                    Game game = docSnapshot.toObject(Game.class);
+                    String creatorID = docSnapshot.getString("creatorID");
+                    String currentUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+                    if (creatorID != null && creatorID.equals(currentUID)) {
+                        startButton.setVisibility(View.VISIBLE);
+                    } else {
+                        startButton.setVisibility(View.GONE);
+                    }
+
+                    // отобразить имена
+                    if (game != null && game.getPlayerIds() != null) {
+                        playerIds.clear();
+                        playerIds.addAll(game.getPlayerIds());
+                        displayPlayerNames();
+                    }
+                });
     }
 
-    private void displayPlayerIds(List<String> playerIds) {
-        TextView[] playerViews = {player5, player1, player2, player3, player4};
-
+    private void displayPlayerNames() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
+        playerNames.clear();
+
         for (int i = 0; i < playerViews.length; ++i) {
-            final int index = i; //иначе не работает
+            final int index = i;
             TextView tv = playerViews[i];
+
             if (i < playerIds.size()) {
                 String uid = playerIds.get(i);
                 db.collection("players").document(uid).get()
                         .addOnSuccessListener(doc -> {
-                            if (doc.exists()) {
-                                String name = doc.getString("name");
-                                tv.setText("Player " + index + ": " + name);
-                            } else {
-                                tv.setText("Player " + index + ": (no profile)");
-                            }
+                            String name = doc.exists() ? doc.getString("name") : "unknown";
+                            while (playerNames.size() <= index) playerNames.add("");
+                            playerNames.set(index, name);
+                            tv.setText(name);
                         })
-                        .addOnFailureListener(e -> {
-                            tv.setText("Player " + index + ": error");
-                        });
+                        .addOnFailureListener(e -> tv.setText("(error)"));
             } else {
                 tv.setText("xxx");
             }
