@@ -85,8 +85,8 @@ public class GameActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         leaveGame();
+        super.onDestroy();
     }
 
     protected void onStop() {
