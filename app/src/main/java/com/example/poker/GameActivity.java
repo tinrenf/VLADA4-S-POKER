@@ -4,8 +4,14 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+
+
 import android.util.Log;
 import java.util.*;
 
@@ -63,6 +69,7 @@ public class GameActivity extends AppCompatActivity {
             }
         });
 
+        //FOLD
         foldButton.setOnClickListener(v -> {
             // Пока просто текст
             playerInfo.setText("You folded!");
@@ -70,6 +77,56 @@ public class GameActivity extends AppCompatActivity {
 
         //Установка блайндов
         postBigBlind();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        leaveGame();
+    }
+
+    private void leaveGame() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        String uid = user.getUid();
+        String gameId = getIntent().getStringExtra("gameId");
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference gameRef = db.collection("games").document(gameId);
+
+        gameRef.get().addOnSuccessListener(snapshot -> {
+            if (!snapshot.exists()) return;
+
+            List<String> playerIds = (List<String>) snapshot.get("playerIds");
+            String creatorID = snapshot.getString("creatorID");
+
+            if (playerIds == null) playerIds = new ArrayList<>();
+            playerIds.remove(uid); // Удаляем текущего игрока
+
+            if (playerIds.isEmpty()) {
+                // Нет игроков — удаляем игру
+                gameRef.delete().addOnSuccessListener(aVoid ->
+                        Log.d("GameExit", "Игра удалена, игроков не осталось"));
+                return;
+            }
+
+            // Обновляем playerIds и при необходимости creatorID
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("playerIds", playerIds);
+
+            if (uid.equals(creatorID)) {
+                // Передаём хост права первому оставшемуся игроку
+                String newcreatorID = playerIds.get(0);
+                updates.put("creatorID", newcreatorID);
+                Log.d("GameExit", "Хост передан игроку: " + newcreatorID);
+            }
+
+            gameRef.update(updates)
+                    .addOnSuccessListener(aVoid ->
+                            Log.d("GameExit", "Игрок вышел, обновлены playerIds и creatorID"))
+                    .addOnFailureListener(e ->
+                            Log.e("GameExit", "Ошибка обновления: " + e.getMessage()));
+        });
     }
 
     private void postBigBlind() {
