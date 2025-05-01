@@ -5,6 +5,7 @@ public class Player {
     static final int START_MONEY = 1488; // базовое количество денег, выдаваемых игроку, как только он зарегестрировался
     private String name;
     private int money;
+    private String gameId;
 
     // конструкторы
     Player(String name, int money) {
@@ -26,9 +27,15 @@ public class Player {
     public int getMoney() {
         return money;
     }
+    public String getGameId() {
+        return gameId;
+    }
 
     public void setMoney(int new_money) {
         this.money = new_money;
+    }
+    public void setGameId(String gameId) {
+        this.gameId = gameId;
     }
 
     // какая-нибудь хуета
