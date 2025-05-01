@@ -38,7 +38,7 @@ public class GameListActivity extends AppCompatActivity {
     private GameAdapter adapter;
     private List<Game> gameList;
 
-    private Button createGameButton;
+    private Button createGameButton, BackButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +69,12 @@ public class GameListActivity extends AppCompatActivity {
 
         createGameButton = findViewById(R.id.create_game_button);
         createGameButton.setOnClickListener(v -> createNewGame());
+
+        BackButton = findViewById(R.id.BackFLbutton);
+        BackButton.setOnClickListener(v -> {
+            Intent intent = new Intent(GameListActivity.this, MainActivity.class);
+            startActivity(intent);
+        });
 
         listenForGames();
     }
@@ -112,10 +118,10 @@ public class GameListActivity extends AppCompatActivity {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         Map<String, Object> game = new HashMap<>();
-        game.put("hostId", currentUser.getUid());
 
         List<String> playerIds = new ArrayList<>();
         playerIds.add(currentUser.getUid());
+        game.put("creatorID", currentUser.getUid());
         game.put("playerIds", playerIds);
 
         game.put("maxPlayers", 5);

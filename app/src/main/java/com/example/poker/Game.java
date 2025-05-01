@@ -5,14 +5,14 @@ import java.util.*;
 
 public class Game { //Эта штука для датабазы firebase
     private String id;
-    private String creatorId;
+    private String creatorID;
     private List<String> playerIds;
     private int maxPlayers;
     private Timestamp timestamp;
 
-    public Game(String id, String creatorId, List<String> playerIds, int maxPlayers, Timestamp timestamp) {
+    public Game(String id, String creatorID, List<String> playerIds, int maxPlayers, Timestamp timestamp) {
         this.id = id;
-        this.creatorId = creatorId;
+        this.creatorID = creatorID;
         this.playerIds = playerIds;
         this.maxPlayers = maxPlayers;
         this.timestamp = timestamp;
@@ -29,12 +29,12 @@ public class Game { //Эта штука для датабазы firebase
         this.id = id;
     }
 
-    public String getCreatorId() {
-        return creatorId;
+    public String getcreatorID() {
+        return creatorID;
     }
 
-    public void setCreatorId(String creatorId) {
-        this.creatorId = creatorId;
+    public void setcreatorID(String creatorID) {
+        this.creatorID = creatorID;
     }
 
     public List<String> getPlayerIds() {

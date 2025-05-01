@@ -40,7 +40,7 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
     @Override
     public void onBindViewHolder(@NonNull GameViewHolder holder, int position) {
         Game game = games.get(position);
-        holder.gameInfo.setText("Game: " + game.getId() + "\nHost: " + game.getCreatorId());
+        holder.gameInfo.setText("Game: " + game.getId() + "\nHost: " + game.getcreatorID());
 
         holder.joinButton.setOnClickListener(v -> {
             if (game.getPlayerIds().contains(currentUserUid)) {
@@ -63,7 +63,7 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
                         v.getContext().startActivity(intent);
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(v.getContext(), "Ошибка подключения: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(v.getContext(), "Ты ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         });
     }
