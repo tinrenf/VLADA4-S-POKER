@@ -5,19 +5,20 @@ public class Player {
     static final int START_MONEY = 1488; // базовое количество денег, выдаваемых игроку, как только он зарегестрировался
     private String name;
     private int money;
-    private String gameId;
+    private String userId, gameId;
 
     // конструкторы
-    Player(String name, int money) {
+    Player(String userId, String name, int money) {
+        this.userId = userId;
         this.name = name;
         this.money = money;
     }
     Player() {
-        this("Unnamed", START_MONEY);
+        this(null,"Unnamed", START_MONEY);
     }
 
-    Player(String name) {
-        this(name, START_MONEY);
+    Player(String userId, String name) {
+        this(userId, name, START_MONEY);
     }
 
     // геттеры сеттеры
@@ -27,6 +28,7 @@ public class Player {
     public int getMoney() {
         return money;
     }
+    public String getUserId() { return userId; }
     public String getGameId() {
         return gameId;
     }

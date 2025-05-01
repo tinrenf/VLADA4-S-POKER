@@ -14,7 +14,7 @@ import java.util.*;
 
 public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
-    private EditText email, password;
+    private EditText name, email, password;
     private Button btnRegister;
 
     @Override
@@ -23,19 +23,21 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         mAuth = FirebaseAuth.getInstance();
+        name = findViewById(R.id.name);
         email = findViewById(R.id.email);
         password = findViewById(R.id.password);
         btnRegister = findViewById(R.id.btnRegister);
 
         btnRegister.setOnClickListener(v -> {
-            String e = email.getText().toString().trim();
-            String p = password.getText().toString().trim();
-            if (e.isEmpty() || p.length() < 6) {
-                Toast.makeText(this, "Enter your email and password >=6 characters", Toast.LENGTH_SHORT).show();
+            String inName = name.getText().toString().trim();
+            String inEmail = email.getText().toString().trim();
+            String inPassword = password.getText().toString().trim();
+            if (inName.isEmpty() || inEmail.isEmpty() || inPassword.length() < 6) {
+                Toast.makeText(this, "Enter your name, email and password >=6 characters", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            mAuth.createUserWithEmailAndPassword(e, p).addOnCompleteListener(task -> {
+            mAuth.createUserWithEmailAndPassword(inEmail, inPassword).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     FirebaseUser user = mAuth.getCurrentUser();
                     if (user != null) {
@@ -56,6 +58,15 @@ public class RegisterActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                 }
+            });
+
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            Player pl = new Player(mAuth.getCurrentUser().getUid(), inName);
+            db.collection("players").add(pl).addOnSuccessListener(documentReference -> {
+                Log.d("CreatePlayer", "Player created with ID: " + documentReference.getId());
+            }).addOnFailureListener(e -> {
+                Log.w("CreatePlayer", "Error adding player", e);
+                Toast.makeText(this, "Error creating player", Toast.LENGTH_SHORT).show();
             });
         });
     }
