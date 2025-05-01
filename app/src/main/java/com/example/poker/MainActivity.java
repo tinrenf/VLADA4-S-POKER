@@ -24,7 +24,10 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 
+import android.widget.TextView;
+
 public class MainActivity extends AppCompatActivity {
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,26 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         Button playButton = findViewById(R.id.play_button);
+
+        TextView userInfo = findViewById(R.id.user_info);
+        db = FirebaseFirestore.getInstance();
+
+        if (currentUser != null) {
+            String uid = currentUser.getUid();
+            db.collection("players").document(uid).get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            String name = documentSnapshot.getString("name");
+                            String email = currentUser.getEmail();
+                            userInfo.setText("Имя: " + name + "\nEmail: " + email);
+                        } else {
+                            userInfo.setText("Профиль игрока не найден.");
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Ошибка загрузки данных", Toast.LENGTH_SHORT).show();
+                    });
+        }//Инфа о пользователе
 
         if (currentUser == null) {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);

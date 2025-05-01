@@ -9,6 +9,15 @@
     android:gravity="center"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/user_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="User info loading..."
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:paddingBottom="8dp" />
+
     <Button
         android:id="@+id/btnLogin"
         android:layout_width="180dp"

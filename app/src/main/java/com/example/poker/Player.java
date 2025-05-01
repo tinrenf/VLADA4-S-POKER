@@ -2,43 +2,32 @@ package com.example.poker;
 
 import java.util.*;
 public class Player {
-    static final int START_MONEY = 1488; // базовое количество денег, выдаваемых игроку, как только он зарегестрировался
+    public static final int START_MONEY = 1488;// базовое количество денег, выдаваемых игроку, как только он зарегестрировался
     private String name;
     private int money;
-    private String userId, gameId;
+    private String gameId;
 
     // конструкторы
-    Player(String userId, String name, int money) {
-        this.userId = userId;
+
+    public Player() {
+        this("Unnamed", START_MONEY);
+    }
+    public Player(String name) {
+        this(name, START_MONEY);
+    }
+    public Player(String name, int money) {
         this.name = name;
         this.money = money;
     }
-    Player() {
-        this(null,"Unnamed", START_MONEY);
-    }
-
-    Player(String userId, String name) {
-        this(userId, name, START_MONEY);
-    }
 
     // геттеры сеттеры
-    public String getName() {
-        return name;
-    }
-    public int getMoney() {
-        return money;
-    }
-    public String getUserId() { return userId; }
-    public String getGameId() {
-        return gameId;
-    }
+    public String getName() { return name; }
+    public int getMoney() { return money; }
+    public String getGameId() { return gameId; }
 
-    public void setMoney(int new_money) {
-        this.money = new_money;
-    }
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
-    }
+    public void setName(String name) { this.name = name; }
+    public void setMoney(int money) { this.money = money; }
+    public void setGameId(String gameId) { this.gameId = gameId; }
 
     // какая-нибудь хуета
 }

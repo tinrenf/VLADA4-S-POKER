@@ -28,29 +28,36 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin.setOnClickListener(v -> {
             String e = email.getText().toString().trim();
             String p = password.getText().toString().trim();
-            if (e.isEmpty() || p.length() < 6) {
-                Toast.makeText(this, "Enter your email and password", Toast.LENGTH_SHORT).show();
+
+            if (e.isEmpty() || p.isEmpty()) {
+                Toast.makeText(this, "Please enter both email and password", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (p.length() < 6) {
+                Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             mAuth.signInWithEmailAndPassword(e, p)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                            FirebaseUser user = mAuth.getCurrentUser();
                             if (user != null) {
                                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 finish();
                             }
                         } else {
-                            Toast.makeText(LoginActivity.this, "Authentication failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
         });
 
         btnLoginToReg.setOnClickListener(v -> {
-            Intent intent = new Intent(this, RegisterActivity.class);
-            startActivity(intent);
+            startActivity(new Intent(this, RegisterActivity.class));
         });
     }
 }
+

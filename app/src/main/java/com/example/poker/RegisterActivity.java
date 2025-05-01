@@ -32,42 +32,44 @@ public class RegisterActivity extends AppCompatActivity {
             String inName = name.getText().toString().trim();
             String inEmail = email.getText().toString().trim();
             String inPassword = password.getText().toString().trim();
+
             if (inName.isEmpty() || inEmail.isEmpty() || inPassword.length() < 6) {
                 Toast.makeText(this, "Enter your name, email and password >=6 characters", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            mAuth.createUserWithEmailAndPassword(inEmail, inPassword).addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    FirebaseUser user = mAuth.getCurrentUser();
-                    if (user != null) {
-                        String uid = user.getUid();
-                        String emailRegistered = user.getEmail();
-                        Log.d("REGISTER", "User registered. UID = " + uid + ", Email = " + emailRegistered);
+            mAuth.createUserWithEmailAndPassword(inEmail, inPassword)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            if (user != null) {
+                                String userID = user.getUid();
+                                String emailRegistered = user.getEmail();
 
-                        FirebaseFirestore db = FirebaseFirestore.getInstance();
-                        Map<String, Object> userData = new HashMap<>();
-                        userData.put("email", emailRegistered);
-                        userData.put("password", password);
-                        db.collection("users").document(uid).set(userData);
-                    }
+                                FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-                    Toast.makeText(this, "Successful registration", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(this, MainActivity.class));
-                    finish();
-                } else {
-                    Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
+                                Map<String, Object> userData = new HashMap<>();
+                                userData.put("email", emailRegistered);
+                                db.collection("users").document(userID).set(userData);
 
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            Player pl = new Player(mAuth.getCurrentUser().getUid(), inName);
-            db.collection("players").add(pl).addOnSuccessListener(documentReference -> {
-                Log.d("CreatePlayer", "Player created with ID: " + documentReference.getId());
-            }).addOnFailureListener(e -> {
-                Log.w("CreatePlayer", "Error adding player", e);
-                Toast.makeText(this, "Error creating player", Toast.LENGTH_SHORT).show();
-            });
+                                Player pl = new Player(inName);
+                                db.collection("players").document(userID).set(pl)
+                                        .addOnSuccessListener(aVoid -> {
+                                            Log.d("CreatePlayer", "Player document created for UID: " + userID);
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Log.w("CreatePlayer", "Error adding player", e);
+                                            Toast.makeText(this, "Error creating player", Toast.LENGTH_SHORT).show();
+                                        });
+                            }
+
+                            Toast.makeText(this, "Successful registration", Toast.LENGTH_SHORT).show();
+                            startActivity(new Intent(this, MainActivity.class));
+                            finish();
+                        } else {
+                            Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
         });
     }
 }

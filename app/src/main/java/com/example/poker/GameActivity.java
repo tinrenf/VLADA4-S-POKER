@@ -25,6 +25,7 @@ public class GameActivity extends AppCompatActivity {
     int big_blind = 100;
     int small_blind = big_blind / 2;
     int cur_rate = big_blind;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -185,8 +186,27 @@ public class GameActivity extends AppCompatActivity {
     private void displayPlayerIds(List<String> playerIds) {
         TextView[] playerViews = {player5, player1, player2, player3, player4};
 
-        for (int i = 1; i <= playerIds.size() && i <= playerViews.length; i++) {
-            playerViews[i - 1].setText("Player " + i + ": " + playerIds.get(i - 1));
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        for (int i = 0; i < playerViews.length; ++i) {
+            final int index = i; //иначе не работает
+            TextView tv = playerViews[i];
+            if (i < playerIds.size()) {
+                String uid = playerIds.get(i);
+                db.collection("players").document(uid).get()
+                        .addOnSuccessListener(doc -> {
+                            if (doc.exists()) {
+                                String name = doc.getString("name");
+                                tv.setText("Player " + index + ": " + name);
+                            } else {
+                                tv.setText("Player " + index + ": (no profile)");
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            tv.setText("Player " + index + ": error");
+                        });
+            } else {
+                tv.setText("xxx");
+            }
         }
     }
 }
