@@ -35,19 +35,7 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        Button LoginButton = findViewById(R.id.btnLogin);
-        Button RegisterButton = findViewById(R.id.btnRegister);
         Button logoutButton = findViewById(R.id.logout_button);
-
-        LoginButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(intent);
-        });
-
-        RegisterButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
-            startActivity(intent);
-        });
 
         logoutButton.setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
@@ -58,21 +46,26 @@ public class MainActivity extends AppCompatActivity {
         });
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
         Button playButton = findViewById(R.id.play_button);
 
-        TextView userInfo = findViewById(R.id.user_info);
         db = FirebaseFirestore.getInstance();
 
         if (currentUser != null) {
             String uid = currentUser.getUid();
             db.collection("players").document(uid).get()
                     .addOnSuccessListener(documentSnapshot -> {
+                        TextView playerName = findViewById(R.id.playerName);
+                        TextView playerChips = findViewById(R.id.playerChips);
                         if (documentSnapshot.exists()) {
                             String name = documentSnapshot.getString("name");
-                            String email = currentUser.getEmail();
-                            userInfo.setText("Имя: " + name + "\nEmail: " + email);
+                            Long chips = documentSnapshot.getLong("money");
+
+                            playerName.setText(name);
+                            playerChips.setText("Chips: " + chips);
                         } else {
-                            userInfo.setText("Профиль игрока не найден.");
+                            playerName.setText("Player not found");
+                            playerName.setText("Player not found");
                         }
                     })
                     .addOnFailureListener(e -> {
