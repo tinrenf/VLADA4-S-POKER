@@ -52,7 +52,7 @@ public class GameActivity extends AppCompatActivity {
     private int lastRaise = -1;
 
     private TextView[] chipViews;
-    private Set<String> playersRaisedThisRound = new HashSet<>();
+    private List<String> playersRaisedThisRound = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -388,16 +388,12 @@ public class GameActivity extends AppCompatActivity {
         int currentIndex = playerIds.indexOf(currentPlayerID);
         int nextIndex = (currentIndex + 1) % playerIds.size();
 
-        if (nextIndex == lastRaise) {
-            Toast.makeText(this, "AAAAAAAAAAA", Toast.LENGTH_SHORT).show();
-        }
-
         gameRef.get().addOnSuccessListener(docSnapshot -> {
             //lastRaise = (int)docSnapshot.get("lastRaise");
             if (nextIndex == lastRaise) {
-                gameRef.update("stage", "DDD");
-                return;
-                //proceedToNextStage();
+                //gameRef.update("stage", "DDD");
+                //return;
+                proceedToNextStage();
                 //return;
             }
             if (docSnapshot.exists()) {
