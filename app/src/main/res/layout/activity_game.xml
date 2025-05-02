@@ -5,7 +5,35 @@
     android:background="@color/green"
     android:padding="16dp">
 
-    <!-- Кнопки действий в самом низу -->
+    <LinearLayout
+        android:id="@+id/community_cards"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_above="@id/start_button"
+        android:layout_marginBottom="225dp">
+
+        <TextView android:id="@+id/card_comm1" style="@style/CommCard"/>
+        <TextView android:id="@+id/card_comm2" style="@style/CommCard"/>
+        <TextView android:id="@+id/card_comm3" style="@style/CommCard"/>
+        <TextView android:id="@+id/card_comm4" style="@style/CommCard"/>
+        <TextView android:id="@+id/card_comm5" style="@style/CommCard"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/pot_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="12dp"
+        android:text="Pot: 0"
+        android:textColor="@android:color/black"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <!-- Кнопки действий в самом низу + pot наверху-->
     <LinearLayout
         android:id="@+id/action_buttons"
         android:layout_width="match_parent"
@@ -45,6 +73,16 @@
         android:layout_centerHorizontal="true"
         android:text="Start" />
 
+    <Button
+        android:id="@+id/next_round"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Next"
+        android:visibility="gone"
+        android:layout_above="@id/action_buttons"
+        android:layout_toEndOf="@id/start_button"
+        android:layout_marginStart="16dp"/>
+
     <!-- Игрок 0 над кнопками -->
     <LinearLayout
         android:id="@+id/player0"
@@ -74,6 +112,15 @@
             android:layout_gravity="center_horizontal" />
 
         <TextView
+            android:id="@+id/bet_player5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bet: 0"
+            android:textColor="#FFCC00"
+            android:textSize="14sp"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
             android:id="@+id/cards_player5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -81,6 +128,14 @@
             android:textColor="@android:color/white"
             android:textSize="16sp"
             android:layout_gravity="center_horizontal" />
+        <TextView
+            android:id="@+id/player5_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chips: 1000"
+            android:textSize="14sp"
+            android:textColor="#444444"
+            android:layout_gravity="center_horizontal"/>
     </LinearLayout>
 
     <!-- Игрок 2 слева сверху -->
@@ -108,6 +163,23 @@
             android:text="--  --"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/bet_player2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bet: 0"
+            android:textColor="#FFCC00"
+            android:textSize="14sp"
+            android:layout_below="@id/player2_name"
+            android:layout_centerHorizontal="true"/>
+        <TextView
+            android:id="@+id/player2_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chips: 1000"
+            android:textSize="14sp"
+            android:textColor="#444444" />
     </LinearLayout>
 
     <!-- Игрок 3 справа сверху -->
@@ -135,6 +207,24 @@
             android:text="--  --"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/bet_player3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bet: 0"
+            android:textColor="#FFCC00"
+            android:textSize="14sp"
+            android:layout_below="@id/player3_name"
+            android:layout_centerHorizontal="true"/>
+
+        <TextView
+            android:id="@+id/player3_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chips: 1000"
+            android:textSize="14sp"
+            android:textColor="#444444" />
     </LinearLayout>
 
     <!-- Игрок 1 слева по центру -->
@@ -162,6 +252,24 @@
             android:text="--  --"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/bet_player1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bet: 0"
+            android:textColor="#FFCC00"
+            android:textSize="14sp"
+            android:layout_below="@id/player1_name"
+            android:layout_centerHorizontal="true"/>
+
+        <TextView
+            android:id="@+id/player1_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chips: 1000"
+            android:textSize="14sp"
+            android:textColor="#444444" />
     </LinearLayout>
 
     <!-- Игрок 4 справа по центру -->
@@ -189,6 +297,24 @@
             android:text="--  --"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/bet_player4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bet: 0"
+            android:textColor="#FFCC00"
+            android:textSize="14sp"
+            android:layout_below="@id/player4_name"
+            android:layout_centerHorizontal="true"/>
+
+        <TextView
+            android:id="@+id/player4_chips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chips: 1000"
+            android:textSize="14sp"
+            android:textColor="#444444" />
     </LinearLayout>
 
 </RelativeLayout>

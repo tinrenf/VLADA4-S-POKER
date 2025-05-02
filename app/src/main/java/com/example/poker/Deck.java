@@ -1,12 +1,7 @@
 package com.example.poker;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-/**
- * Простая реализация колоды для покера на основе существующего класса Card.
- */
 public class Deck {
     private final List<Card> cards;
 
