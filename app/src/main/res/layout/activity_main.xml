@@ -1,56 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    tools:context=".MainActivity">
+    android:padding="16dp">
 
-    <TextView
-        android:id="@+id/user_info"
-        android:layout_width="match_parent"
+    <!-- Вьюшка с аватаром, именем и очками -->
+    <LinearLayout
+        android:id="@+id/playerInfo"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="User info loading..."
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:paddingBottom="8dp" />
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-    <Button
-        android:id="@+id/btnLogin"
-        android:layout_width="180dp"
-        android:layout_height="80dp"
-        android:layout_marginBottom="1dp"
-        android:backgroundTint="@color/green"
-        android:textSize="30sp"
-        android:text="Login" />
+        <ImageView
+            android:id="@+id/playerAvatar"
+            android:layout_width="88dp"
+            android:layout_height="101dp"
+            android:padding="11dp"
+            android:src="@drawable/avatar_default"
+            android:background="@drawable/avatar_background"
+            android:scaleType="centerCrop" />
 
-    <Button
-        android:id="@+id/btnRegister"
-        android:layout_width="180dp"
-        android:layout_height="80dp"
-        android:text="Register"
-        android:textSize="30sp"
-        android:backgroundTint="@color/green"/>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="11dp">
 
-    <Button
-        android:id="@+id/play_button"
-        android:layout_width="180dp"
-        android:layout_height="80dp"
-        android:text="Play"
-        android:textSize="30sp"
-        android:backgroundTint="@color/green"
-        />
+            <TextView
+                android:id="@+id/playerName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Игрок"
+                android:textSize="20sp"
+                android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/logout_button"
-        android:layout_width="180dp"
-        android:layout_height="80dp"
-        android:text="Logout"
-        android:textSize="30sp"
-        android:backgroundTint="@color/green"
-        />
+            <TextView
+                android:id="@+id/playerChips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chips: 0"
+                android:textSize="18sp" />
+        </LinearLayout>
+    </LinearLayout>
 
-</LinearLayout>
+    <!-- Центральный блок с кнопками -->
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        tools:context=".MainActivity">
+
+        <Button
+            android:id="@+id/play_button"
+            android:layout_width="180dp"
+            android:layout_height="80dp"
+            android:text="Play"
+            android:textSize="30sp"
+            android:backgroundTint="@color/green"
+            />
+
+        <Button
+            android:id="@+id/logout_button"
+            android:layout_width="180dp"
+            android:layout_height="80dp"
+            android:text="Logout"
+            android:textSize="30sp"
+            android:backgroundTint="@color/green"
+            />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
