@@ -14,11 +14,11 @@
         android:layout_above="@id/start_button"
         android:layout_marginBottom="275dp">
 
-        <TextView android:id="@+id/card_comm1" style="@style/CommCard"/>
-        <TextView android:id="@+id/card_comm2" style="@style/CommCard"/>
-        <TextView android:id="@+id/card_comm3" style="@style/CommCard"/>
-        <TextView android:id="@+id/card_comm4" style="@style/CommCard"/>
-        <TextView android:id="@+id/card_comm5" style="@style/CommCard"/>
+        <ImageView android:id="@+id/card_comm1" style="@style/CommCard"/>
+        <ImageView android:id="@+id/card_comm2" style="@style/CommCard"/>
+        <ImageView android:id="@+id/card_comm3" style="@style/CommCard"/>
+        <ImageView android:id="@+id/card_comm4" style="@style/CommCard"/>
+        <ImageView android:id="@+id/card_comm5" style="@style/CommCard"/>
     </LinearLayout>
 
     <TextView

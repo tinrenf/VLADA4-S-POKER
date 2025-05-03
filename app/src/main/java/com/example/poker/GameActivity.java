@@ -2,6 +2,7 @@ package com.example.poker;
 
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import android.widget.Toast;
@@ -39,7 +40,7 @@ public class GameActivity extends AppCompatActivity {
     private String currentUID;
     private TextView potView;
 
-    private TextView[] commViews;
+    private ImageView[] commViews;
     private List<String> deck;
     private int round = 0;
     private String creatorID;
@@ -89,7 +90,7 @@ public class GameActivity extends AppCompatActivity {
                 findViewById(R.id.bet_player4)
         };
 
-        commViews = new TextView[]{
+        commViews = new ImageView[]{
                 findViewById(R.id.card_comm1),
                 findViewById(R.id.card_comm2),
                 findViewById(R.id.card_comm3),
@@ -705,9 +706,9 @@ public class GameActivity extends AppCompatActivity {
 
             for (int i = 0; i < commViews.length; i++) {
                 if (i < communityCards.size()) {
-                    commViews[i].setText(communityCards.get(i));
+                    commViews[i].setImageResource(getResources().getIdentifier(Card.toImage(communityCards.get(i)), "drawable", getPackageName()));
                 } else {
-                    commViews[i].setText(" ");
+                    commViews[i].setImageDrawable(null);
                 }
             }
         });
@@ -947,7 +948,7 @@ public class GameActivity extends AppCompatActivity {
                 List<String> commCards = (List<String>) docSnapshot.get("communityCards");
                 if (commCards != null) {
                     for (int i = 0; i < commCards.size(); i++) {
-                        commViews[i].setText(commCards.get(i));
+                        commViews[i].setImageResource(getResources().getIdentifier(Card.toImage(commCards.get(i)), "drawable", getPackageName()));
                     }
                 }
             }
