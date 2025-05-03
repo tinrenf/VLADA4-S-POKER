@@ -2,6 +2,7 @@ package com.example.poker;
 
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import android.widget.Toast;
@@ -18,7 +19,6 @@ import android.util.Log;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import android.content.Intent;
-import com.google.firebase.firestore.FieldValue;
 
 public class GameActivity extends AppCompatActivity {
     private FirebaseFirestore db;
@@ -39,7 +39,7 @@ public class GameActivity extends AppCompatActivity {
     private String currentUID;
     private TextView potView;
 
-    private TextView[] commViews;
+    private ImageView[] commViews;
     private List<String> deck;
     private int round = 0;
     private String creatorID;
@@ -89,7 +89,7 @@ public class GameActivity extends AppCompatActivity {
                 findViewById(R.id.bet_player4)
         };
 
-        commViews = new TextView[]{
+        commViews = new ImageView[]{
                 findViewById(R.id.card_comm1),
                 findViewById(R.id.card_comm2),
                 findViewById(R.id.card_comm3),
@@ -362,6 +362,7 @@ public class GameActivity extends AppCompatActivity {
 
                     Map<String, Object> updates = new HashMap<>();
                     updates.put("foldedPlayers", foldedList);
+                    updates.put("playerBets", playerBets);
 
                     gameRef.update(updates);
 
@@ -387,62 +388,28 @@ public class GameActivity extends AppCompatActivity {
         gameRef.get().addOnSuccessListener(docSnapshot -> {
             if (!docSnapshot.exists()) return;
 
-            Map<String, Object> gameUpdates = new HashMap<>();
-
             Long pot = docSnapshot.getLong("pot");
             if (pot == null) pot = 0L;
 
             Map<String, Long> chips = (Map<String, Long>) docSnapshot.get("chips");
             if (chips == null) chips = new HashMap<>();
 
-            Map<String, Object> pb = (Map<String, Object>) docSnapshot.get("playerBets");
-            if (pb == null) pb = new HashMap<>();
-
-            Long newWinnerMoney = pot;
-            for (Object value : pb.values()) {
-                if (value instanceof Number) {
-                    newWinnerMoney += ((Number) value).longValue();
-                }
-            }
+            Map<String, Object> gameUpdates = new HashMap<>();
 
             for (Map.Entry<String, Long> e : chips.entrySet()) {
                 String uid = e.getKey();
                 Long moneyLong = e.getValue();
                 int money = moneyLong != null ? moneyLong.intValue() : 0;
-                if (uid.equals(winnerID)) {
-                    newWinnerMoney += money;
-                    money = newWinnerMoney.intValue();
-                }
+                if (uid.equals(winnerID))
+                    money += pot;
                 FirebaseFirestore.getInstance().collection("players")
                         .document(uid).update("money", money);
             }
 
-            chips.put(winnerID, newWinnerMoney);
             pot = 0L;
             gameUpdates.put("pot", pot);
-            gameUpdates.put("chips", chips);
             gameRef.update(gameUpdates);
-
-            DocumentReference oldGameRef = db.collection("games").document(gameId);
-            oldGameRef.get().addOnSuccessListener(doc -> {
-                if (!doc.exists()) return;
-
-                List<String> players = (List<String>) doc.get("playerIds");
-                Map<String,Object> newGame = new HashMap<>();
-                newGame.put("creatorID", creatorID);
-                newGame.put("playerIds", players);
-                newGame.put("maxPlayers", 5);
-                newGame.put("status", "waiting");
-                newGame.put("timestamp", FieldValue.serverTimestamp());
-                newGame.put("chips", doc.get("chips"));
-
-                db.collection("games")
-                        .add(newGame)
-                        .addOnSuccessListener(newGameRef -> {
-                            String newGameId = newGameRef.getId();
-                            oldGameRef.update("newGameId", newGameId);
-                        });
-            });
+            gameRef.update("resetGame", true);
         });
     }
 
@@ -457,9 +424,9 @@ public class GameActivity extends AppCompatActivity {
 
             for (int i = 0; i < commViews.length; i++) {
                 if (i < communityCards.size()) {
-                    commViews[i].setText(communityCards.get(i));
+                    commViews[i].setImageResource(getResources().getIdentifier(Card.toImage(communityCards.get(i)), "drawable", getPackageName()));
                 } else {
-                    commViews[i].setText(" ");
+                    commViews[i].setImageDrawable(null);
                 }
             }
         });
@@ -699,36 +666,37 @@ public class GameActivity extends AppCompatActivity {
                 List<String> commCards = (List<String>) docSnapshot.get("communityCards");
                 if (commCards != null) {
                     for (int i = 0; i < commCards.size(); i++) {
-                        commViews[i].setText(commCards.get(i));
+                        commViews[i].setImageResource(getResources().getIdentifier(Card.toImage(commCards.get(i)), "drawable", getPackageName()));
                     }
                 }
             }
 
-            String newGameId = docSnapshot.getString("newGameId");
-            if (newGameId != null && !newGameId.isEmpty()) {
-                // сбросим флаг, чтобы не зациклиться
-                gameRef.update("newGameId", FieldValue.delete());
-                // и запустим новую GameActivity
-                Intent intent = new Intent(GameActivity.this, GameActivity.class);
-                intent.putExtra("gameId", newGameId);
+            Boolean reset = docSnapshot.getBoolean("resetGame");
+            if (Boolean.TRUE.equals(reset)) {
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("resetGame", false);
+                gameRef.update(updates);
+                Intent intent = getIntent();
+                intent.putExtra("gameId", gameId);
+                intent.putStringArrayListExtra("playerIds", new ArrayList<>(playerIds));
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
                 finish();
+                startActivity(intent);
             }
-        });
-    }
 
-    private List<String> generateShuffledDeck() {
-        deck = new ArrayList<>();
-        int[] suits = {1,2,3,4};
-        for(int s: suits){
-            for(int r=2; r<=14; r++){
-                Card curCard = new Card(s, r);
-                deck.add(curCard.toString());
-            }
-        }
-        Collections.shuffle(deck);
-        return deck;
+            /*updates.put("stage", "preflop");
+            updates.put("lastRaise", null);
+            updates.put("communtyCards", null);
+
+            updates.put("chips", null);
+            updates.put("currentBet", null);
+            updates.put("currentPlayerID", null);
+            updates.put("deck", null);
+            updates.put("foldedPlayers", null);
+            updates.put("gameStarted", null);
+            updates.put("holeCards", null);
+            updates.put("pot", null);*/
+        });
     }
 
     private void displayPlayerNames() {

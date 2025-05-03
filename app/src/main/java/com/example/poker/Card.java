@@ -3,6 +3,45 @@ package com.example.poker;
 import java.util.*;
 
 public class Card implements Comparable<Card> {
+    static public String toImage(String s) {
+        String p = "c";
+        if (s.length() == 3) {
+            p += "10";
+        } else {
+            switch (s.charAt(0)) {
+                case 'J':
+                    p += "jack";
+                    break;
+                case 'Q':
+                    p += "queen";
+                    break;
+                case 'K':
+                    p += "king";
+                    break;
+                case 'A':
+                    p += "ace";
+                    break;
+                default:
+                    p += s.charAt(0);
+            }
+        }
+        p += "_of_";
+        switch (s.charAt(s.length() == 3 ? 2 : 1)) {
+            case '♠':
+                p += "spades";
+                break;
+            case '♥':
+                p += "hearts";
+                break;
+            case '♦':
+                p += "diamonds";
+                break;
+            case '♣':
+                p += "clubs";
+                break;
+        }
+        return p;
+    }
     private int suit;
     // suit -- масть карты
     // 1 -- пики
