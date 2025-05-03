@@ -14,7 +14,7 @@
         <Button
             android:id="@+id/create_game_button"
             style="@style/Widget.AppCompat.Button.Colored"
-            android:layout_width="280dp"
+            android:layout_width="260dp"
             android:layout_height="wrap_content"
             android:layout_weight="6"
             android:text="Create New Game" />

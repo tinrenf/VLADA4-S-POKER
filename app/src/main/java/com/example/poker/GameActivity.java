@@ -17,6 +17,7 @@ import android.graphics.Typeface;
 import android.util.Log;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import android.content.Intent;
 
 public class GameActivity extends AppCompatActivity {
     private FirebaseFirestore db;
@@ -33,7 +34,7 @@ public class GameActivity extends AppCompatActivity {
 
     private int pot = 0;
     private Map<String, Integer> playerBets = new HashMap<>();
-    private Set<String> foldedPlayers = new HashSet<>();
+    private List<String> foldedPlayers = new ArrayList<>();
     private String currentUID;
     private TextView potView;
 
@@ -57,6 +58,12 @@ public class GameActivity extends AppCompatActivity {
         gameId = getIntent().getStringExtra("gameId");
         currentUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
         potView = findViewById(R.id.pot_text);
+
+        playerIds = getIntent().getStringArrayListExtra("playerIds");
+
+        if (playerIds == null) {
+            playerIds = new ArrayList<>();
+        }
 
         playerViews = new TextView[]{findViewById(R.id.player5),
                 findViewById(R.id.player1_name),
@@ -198,6 +205,7 @@ public class GameActivity extends AppCompatActivity {
                         Map<String, Object> chips = new HashMap<>();
 
                         AtomicInteger remaining = new AtomicInteger(playerIds.size());
+
                         for (String uid : playerIds) {
                             db.collection("players").document(uid).get()
                                     .addOnSuccessListener(docSnapshot -> {
@@ -211,19 +219,21 @@ public class GameActivity extends AppCompatActivity {
                                         } else {
                                             chips.put(uid, 5252L);
                                         }
+
                                         if (remaining.decrementAndGet() == 0) {
+                                            Object smallBlindValue = chips.get(smallBlindPlayer);
+                                            Object bigBlindValue = chips.get(bigBlindPlayer);
+                                            if (smallBlindValue instanceof Number && bigBlindValue instanceof Number) {
+                                                int newSmall = ((Number) smallBlindValue).intValue() - small_blind;
+                                                int newBig = ((Number) bigBlindValue).intValue() - big_blind;
+
+                                                chips.put(smallBlindPlayer, newSmall);
+                                                chips.put(bigBlindPlayer, newBig);
+                                            }
+
                                             db.collection("games").document(gameId).update("chips", chips);
                                         }
                                     });
-                        }
-                        Object smallBlindValue = chips.get(smallBlindPlayer);
-                        Object bigBlindValue = chips.get(bigBlindPlayer);
-                        if (smallBlindValue instanceof Number && bigBlindValue instanceof Number) {
-                            int newSmall = ((Number) smallBlindValue).intValue() - small_blind;
-                            int newBig = ((Number) bigBlindValue).intValue() - big_blind;
-
-                            chips.put(smallBlindPlayer, newSmall);
-                            chips.put(bigBlindPlayer, newBig);
                         }
 
                         lastRaise = 0;
@@ -246,7 +256,9 @@ public class GameActivity extends AppCompatActivity {
         });//Когда нажали на кнопку старт
 
         raiseButton.setOnClickListener(v -> {
-            if (!currentUID.equals(currentPlayerID) || playersRaisedThisRound.contains(currentUID)) return;
+            if (!currentUID.equals(currentPlayerID) ||
+                    playersRaisedThisRound.contains(currentUID) ||
+                    foldedPlayers.contains(currentPlayerID)) return;
 
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference gameRef = db.collection("games").document(gameId);
@@ -290,7 +302,7 @@ public class GameActivity extends AppCompatActivity {
         });
 
         callButton.setOnClickListener(v -> {
-            if (!currentUID.equals(currentPlayerID)) return;
+            if (!currentUID.equals(currentPlayerID) || foldedPlayers.contains(currentPlayerID)) return;
 
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference gameRef = db.collection("games").document(gameId);
@@ -333,27 +345,70 @@ public class GameActivity extends AppCompatActivity {
         });
 
         foldButton.setOnClickListener(v -> {
-            if (!currentUID.equals(currentPlayerID)) return;
+            if (!currentUID.equals(currentPlayerID) || foldedPlayers.contains(currentPlayerID)) return;
 
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference gameRef = db.collection("games").document(gameId);
 
             gameRef.get().addOnSuccessListener(docSnapshot -> {
                 if (docSnapshot.exists()) {
-                    Map<String, Boolean> foldedMap = (Map<String, Boolean>) docSnapshot.get("foldedPlayers");
-                    if (foldedMap == null)
-                        foldedMap = new HashMap<>();
-                    foldedMap.put(currentUID, true);//нужно сделать просто хранение IDшек, а не ключ-значение
+                    List<String> foldedList = (List<String>) docSnapshot.get("foldedPlayers");
+                    if (foldedList == null) foldedList = new ArrayList<>();
+
+                    if (!foldedList.contains(currentUID)) {
+                        foldedList.add(currentUID);
+                    }
+
                     Map<String, Object> updates = new HashMap<>();
-                    updates.put("foldedPlayers", foldedMap);
+                    updates.put("foldedPlayers", foldedList);
                     updates.put("playerBets", playerBets);
 
                     gameRef.update(updates);
-                    holeCardViews[0].setText("Folded");
 
-                    proceedToNextPlayer();
+                    if (foldedList.size() == playerIds.size() - 1) {
+                        for (int i = 0; i < playerIds.size(); ++i) {
+                            if (!foldedList.contains(playerIds.get(i))) {
+                                foldEndGame(playerIds.get(i));
+                                break;
+                            }
+                        }
+                    } else {
+                        proceedToNextPlayer();
+                    }
                 }
             });
+        });
+    }
+
+    private void foldEndGame(String winnerID) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference gameRef = db.collection("games").document(gameId);
+
+        gameRef.get().addOnSuccessListener(docSnapshot -> {
+            if (!docSnapshot.exists()) return;
+
+            Long pot = docSnapshot.getLong("pot");
+            if (pot == null) pot = 0L;
+
+            Map<String, Long> chips = (Map<String, Long>) docSnapshot.get("chips");
+            if (chips == null) chips = new HashMap<>();
+
+            Map<String, Object> gameUpdates = new HashMap<>();
+
+            for (Map.Entry<String, Long> e : chips.entrySet()) {
+                String uid = e.getKey();
+                Long moneyLong = e.getValue();
+                int money = moneyLong != null ? moneyLong.intValue() : 0;
+                if (uid.equals(winnerID))
+                    money += pot;
+                FirebaseFirestore.getInstance().collection("players")
+                        .document(uid).update("money", money);
+            }
+
+            pot = 0L;
+            gameUpdates.put("pot", pot);
+            gameRef.update(gameUpdates);
+            gameRef.update("resetGame", true);
         });
     }
 
@@ -452,23 +507,28 @@ public class GameActivity extends AppCompatActivity {
 
     private void proceedToNextPlayer() {
         DocumentReference gameRef = db.collection("games").document(gameId);
-        int currentIndex = playerIds.indexOf(currentPlayerID);
-        int nextIndex = (currentIndex + 1) % playerIds.size();
 
         gameRef.get().addOnSuccessListener(docSnapshot -> {
-            //lastRaise = (int)docSnapshot.get("lastRaise");
-            if (nextIndex == lastRaise) {
-                //gameRef.update("stage", "DDD");
-                //return;
-                proceedToNextStage();
-                //return;
-            }
-            if (docSnapshot.exists()) {
-                List<String> playerIds = (List<String>) docSnapshot.get("playerIds");
+            if (!docSnapshot.exists()) return;
 
-                String nextPlayerUid = playerIds.get(nextIndex);
-                gameRef.update("currentPlayerID", nextPlayerUid);
+            int currentIndex = playerIds.indexOf(currentPlayerID);
+            int nextIndex = (currentIndex + 1) % playerIds.size();
+
+            List<String> foldedPlayers = (List<String>) docSnapshot.get("foldedPlayers");
+            if (foldedPlayers == null) foldedPlayers = new ArrayList<>();
+
+            int originalIndex = nextIndex;
+            while (foldedPlayers.contains(playerIds.get(originalIndex))) {
+                originalIndex = (originalIndex + 1) % playerIds.size();
             }
+            nextIndex = originalIndex;
+
+            if (nextIndex == lastRaise) {
+                proceedToNextStage();
+            }
+            List<String> playerIds = (List<String>) docSnapshot.get("playerIds");
+            String nextPlayerUid = playerIds.get(nextIndex);
+            gameRef.update("currentPlayerID", nextPlayerUid);
         });
     }
 
@@ -552,8 +612,10 @@ public class GameActivity extends AppCompatActivity {
 
             if (docSnapshot.contains("foldedPlayers")) {
                 List<String> list = (List<String>) docSnapshot.get("foldedPlayers");
-                foldedPlayers.clear();
-                foldedPlayers.addAll(list);
+                if (list != null) {
+                    foldedPlayers.clear();
+                    foldedPlayers.addAll(list);
+                }
             }
 
             if (docSnapshot.contains("pot")) {
@@ -588,7 +650,7 @@ public class GameActivity extends AppCompatActivity {
                 for (int i = 0; i < playerIds.size() && i < chipViews.length; i++) {
                     String uid = playerIds.get(i);
                     long chips = chipMap.getOrDefault(uid, 0L);
-                    chipViews[i].setText("Chips: " + chips);  // TextView под ставкой
+                    chipViews[i].setText("Chips: " + chips);  // TextView фишек
                 }
             }
 
@@ -607,6 +669,32 @@ public class GameActivity extends AppCompatActivity {
                     }
                 }
             }
+
+            Boolean reset = docSnapshot.getBoolean("resetGame");
+            if (Boolean.TRUE.equals(reset)) {
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("resetGame", false);
+                gameRef.update(updates);
+                Intent intent = getIntent();
+                intent.putExtra("gameId", gameId);
+                intent.putStringArrayListExtra("playerIds", new ArrayList<>(playerIds));
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                finish();
+                startActivity(intent);
+            }
+
+            /*updates.put("stage", "preflop");
+            updates.put("lastRaise", null);
+            updates.put("communtyCards", null);
+
+            updates.put("chips", null);
+            updates.put("currentBet", null);
+            updates.put("currentPlayerID", null);
+            updates.put("deck", null);
+            updates.put("foldedPlayers", null);
+            updates.put("gameStarted", null);
+            updates.put("holeCards", null);
+            updates.put("pot", null);*/
         });
     }
 
