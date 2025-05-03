@@ -12,7 +12,7 @@
         android:orientation="horizontal"
         android:gravity="center"
         android:layout_above="@id/start_button"
-        android:layout_marginBottom="225dp">
+        android:layout_marginBottom="260dp">
 
         <TextView android:id="@+id/card_comm1" style="@style/CommCard"/>
         <TextView android:id="@+id/card_comm2" style="@style/CommCard"/>
@@ -92,15 +92,6 @@
         android:layout_centerHorizontal="true"
         android:orientation="vertical"
         android:padding="8dp">
-
-        <TextView
-            android:id="@+id/player_info"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="Your chips: 1000"
-            android:textColor="@android:color/white"
-            android:textSize="24sp" />
 
         <TextView
             android:id="@+id/player5"

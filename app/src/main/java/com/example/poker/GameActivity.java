@@ -21,11 +21,8 @@ import android.util.Log;
 import java.util.*;
 
 public class GameActivity extends AppCompatActivity {
-    private TextView playerInfo;
-    private TextView player1, player2, player3, player4, player5;
-    private static final String TAG = "GameActivity";
     private FirebaseFirestore db;
-    int big_blind = 100;
+    int big_blind = 50;
     int small_blind = big_blind / 2;
     int cur_rate = big_blind;
     private TextView[] holeCardViews;
@@ -37,10 +34,8 @@ public class GameActivity extends AppCompatActivity {
     private String gameId;
 
     private int pot = 0;
-    private int currentBet = big_blind;
     private Map<String, Integer> playerBets = new HashMap<>();
     private Set<String> foldedPlayers = new HashSet<>();
-    private boolean hasActed = false;
     private String currentUID;
     private TextView potView;
 
@@ -65,7 +60,6 @@ public class GameActivity extends AppCompatActivity {
         currentUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
         potView = findViewById(R.id.pot_text);
 
-        playerInfo = findViewById(R.id.player_info);
         playerViews = new TextView[]{findViewById(R.id.player5),
                 findViewById(R.id.player1_name),
                 findViewById(R.id.player2_name),
@@ -133,13 +127,13 @@ public class GameActivity extends AppCompatActivity {
                             return;
                         }
 
-                        if (playerIds.size() >= 2) {
-                            String smallBlindPlayer = playerIds.get(0);
-                            String bigBlindPlayer = playerIds.get(1);
+                        String smallBlindPlayer = playerIds.get(0);
+                        String bigBlindPlayer = playerIds.get(1);
 
+                        if (playerIds.size() >= 2) {
                             DocumentReference gameRef = db.collection("games").document(gameId);
 
-                            currentBet = big_blind;
+                            cur_rate = big_blind;
 
                             gameRef.get().addOnSuccessListener(docSnapshot -> {
                                 if (docSnapshot.exists()) {
@@ -153,8 +147,7 @@ public class GameActivity extends AppCompatActivity {
                                     }
 
                                     gameRef.update("currentPlayerID", currentPlayerID);
-                                    gameRef.update("currentBet", currentBet);
-                                    gameRef.update("pot", small_blind + big_blind);
+                                    gameRef.update("currentBet", cur_rate);
                                 }
                             });
 
@@ -165,7 +158,7 @@ public class GameActivity extends AppCompatActivity {
                             playerBets.put(bigBlindPlayer, big_blind);
 
                             updates.put("playerBets", playerBets);
-                            updates.put("pot", small_blind + big_blind);
+                            updates.put("pot", 0);
                             updates.put("stage", "preflop");
 
                             db.collection("games").document(gameId).update(updates);
@@ -207,6 +200,8 @@ public class GameActivity extends AppCompatActivity {
                         for (String uid : playerIds) {
                             chips.put(uid, 1000);
                         }
+                        chips.put(smallBlindPlayer, 1000 - small_blind);
+                        chips.put(bigBlindPlayer, 1000 - big_blind);
 
                         lastRaise = 1;
 
@@ -214,7 +209,7 @@ public class GameActivity extends AppCompatActivity {
                         updates.put("deck", deck);
                         updates.put("holeCards", holeCardStrings);
                         updates.put("gameStarted", true);
-                        updates.put("currentBet", currentBet);
+                        updates.put("currentBet", cur_rate);
                         updates.put("chips", chips);
                         updates.put("lastRaise", lastRaise);
 
@@ -233,25 +228,30 @@ public class GameActivity extends AppCompatActivity {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference gameRef = db.collection("games").document(gameId);
 
-            int raiseAmount = cur_rate * 2;
+            int raiseAmount = cur_rate + big_blind;
 
             gameRef.get().addOnSuccessListener(docSnapshot -> {
                 if (docSnapshot.exists()) {
                     Map<String, Long> chipsMap = (Map<String, Long>) docSnapshot.get("chips");
                     long currentChips = chipsMap.get(currentPlayerID);
+                    Map<String, Object> rawMap = (Map<String, Object>) docSnapshot.get("playerBets");
+                    Map<String, Integer> playerBets = new HashMap<>();
+                    if (rawMap != null) {
+                        for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
+                            playerBets.put(entry.getKey(), ((Number) entry.getValue()).intValue());
+                        }
+                    }
+                    int prevBet = playerBets.getOrDefault(currentUID, 0);
 
-                    if (currentChips - raiseAmount >= 0) {
-                        chipsMap.put(currentPlayerID, currentChips - raiseAmount);
-                        int prevBet = playerBets.getOrDefault(currentUID, 0);
+                    if (currentChips - (raiseAmount - prevBet) >= 0) {
+                        chipsMap.put(currentPlayerID, currentChips - (raiseAmount - prevBet));
                         playerBets = (Map<String, Integer>) docSnapshot.get("playerBets");
-                        playerBets.put(currentUID, prevBet + raiseAmount);
-                        pot += raiseAmount;
-                        cur_rate = prevBet + raiseAmount;
+                        playerBets.put(currentUID, raiseAmount);
+                        cur_rate = raiseAmount;
 
                         Map<String, Object> updates = new HashMap<>();
                         updates.put("chips", chipsMap);
                         updates.put("playerBets", playerBets);
-                        updates.put("pot", pot);
                         updates.put("currentBet", cur_rate);
                         updates.put("lastRaise", playerIds.indexOf(currentUID));
                         updates.put("playersRaisedThisRound", playersRaisedThisRound);
@@ -272,28 +272,32 @@ public class GameActivity extends AppCompatActivity {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference gameRef = db.collection("games").document(gameId);
 
-            int prevBet = playerBets.getOrDefault(currentUID, 0);
-            int toCall = cur_rate - prevBet;
-
-            if (toCall <= 0) {
-                proceedToNextPlayer();
-                return;
-            }
-
             gameRef.get().addOnSuccessListener(docSnapshot -> {
                 if (docSnapshot.exists()) {
+                    Map<String, Object> rawMap = (Map<String, Object>) docSnapshot.get("playerBets");
+                    Map<String, Integer> playerBets = new HashMap<>();
+                    if (rawMap != null) {
+                        for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
+                            playerBets.put(entry.getKey(), ((Number) entry.getValue()).intValue());
+                        }
+                    }
+                    int prevBet = playerBets.getOrDefault(currentPlayerID, 0);
+                    int toCall = cur_rate - prevBet;
+
+                    if (toCall <= 0) {
+                        proceedToNextPlayer();
+                        return;
+                    }
+
                     Map<String, Long> chipsMap = (Map<String, Long>) docSnapshot.get("chips");
                     long currentChips = chipsMap.get(currentPlayerID);
 
                     if (currentChips - toCall >= 0) {
                         chipsMap.put(currentPlayerID, currentChips - toCall);
-                        playerBets = (Map<String, Integer>) docSnapshot.get("playerBets");
-                        playerBets.put(currentUID, cur_rate);
-                        pot += toCall;
+                        playerBets.put(currentPlayerID, cur_rate);
                         Map<String, Object> updates = new HashMap<>();
                         updates.put("chips", chipsMap);
                         updates.put("playerBets", playerBets);
-                        updates.put("pot", pot);
 
                         gameRef.update(updates);
                         updatePotView();
@@ -316,8 +320,7 @@ public class GameActivity extends AppCompatActivity {
                     Map<String, Boolean> foldedMap = (Map<String, Boolean>) docSnapshot.get("foldedPlayers");
                     if (foldedMap == null)
                         foldedMap = new HashMap<>();
-                    foldedMap.put(currentUID, true);
-                    playerBets.put(currentUID, 0);
+                    foldedMap.put(currentUID, true);//нужно сделать просто хранение IDшек, а не ключ-значение
                     Map<String, Object> updates = new HashMap<>();
                     updates.put("foldedPlayers", foldedMap);
                     updates.put("playerBets", playerBets);
@@ -369,8 +372,7 @@ public class GameActivity extends AppCompatActivity {
 
             Map<String, Object> updates = new HashMap<>();
 
-            playerBets.clear();
-            updates.put("playerBets", playerBets);
+            betsUpdate();
 
             if ("preflop".equals(stage)) {
                 updates.put("stage", "flop");
@@ -382,13 +384,49 @@ public class GameActivity extends AppCompatActivity {
                 updates.put("stage", "river");
                 updates.put("communityCards", deck.subList(0, 5));
             } else {
-                // Конец игры — по желанию можно добавить showDown
+                // Конец игры
                 return;
             }
 
             gameRef.update(updates);
         });
     }
+    private void betsUpdate() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference gameRef = db.collection("games").document(gameId);
+
+        gameRef.get().addOnSuccessListener(docSnapshot -> {
+            if (!docSnapshot.exists()) return;
+
+            Map<String, Object> updates = new HashMap<>();
+
+            Map<String, Object> rawPlayerBets = (Map<String, Object>) docSnapshot.get("playerBets");
+            Map<String, Integer> playerBets = new HashMap<>();
+
+            if (rawPlayerBets != null) {
+                for (Map.Entry<String, Object> entry : rawPlayerBets.entrySet()) {
+                    Object val = entry.getValue();
+                    if (val instanceof Number) {
+                        playerBets.put(entry.getKey(), ((Number) val).intValue());
+                    }
+                }
+            }
+            cur_rate = 0;
+            pot = ((Long) docSnapshot.get("pot")).intValue();
+            for (Object val : playerBets.values()) {
+                if (val instanceof Number) {
+                    pot += ((Number) val).intValue();
+                }
+            }
+            playerBets.clear();
+            updates.put("playerBets", playerBets);
+            updates.put("pot", pot);
+            updates.put("currentBet", cur_rate);
+
+            gameRef.update(updates);
+        });
+    }
+
     private void proceedToNextPlayer() {
         DocumentReference gameRef = db.collection("games").document(gameId);
         int currentIndex = playerIds.indexOf(currentPlayerID);
@@ -486,7 +524,7 @@ public class GameActivity extends AppCompatActivity {
             }
 
             if (docSnapshot.contains("currentBet")) {
-                currentBet = ((Long) docSnapshot.get("currentBet")).intValue();
+                cur_rate = ((Long) docSnapshot.get("currentBet")).intValue();
             }
 
             if (docSnapshot.contains("foldedPlayers")) {

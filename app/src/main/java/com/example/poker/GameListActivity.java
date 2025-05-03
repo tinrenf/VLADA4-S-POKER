@@ -71,10 +71,10 @@ public class GameListActivity extends AppCompatActivity {
         createGameButton.setOnClickListener(v -> createNewGame());
 
         BackButton = findViewById(R.id.BackFLbutton);
-        /*BackButton.setOnClickListener(v -> {
+        BackButton.setOnClickListener(v -> {
             Intent intent = new Intent(GameListActivity.this, MainActivity.class);
             startActivity(intent);
-        });*/
+        });
 
         listenForGames();
     }
