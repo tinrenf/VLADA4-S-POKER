@@ -12,7 +12,7 @@
         android:orientation="horizontal"
         android:gravity="center"
         android:layout_above="@id/start_button"
-        android:layout_marginBottom="260dp">
+        android:layout_marginBottom="275dp">
 
         <TextView android:id="@+id/card_comm1" style="@style/CommCard"/>
         <TextView android:id="@+id/card_comm2" style="@style/CommCard"/>
@@ -106,7 +106,6 @@
             android:id="@+id/bet_player5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bet: 0"
             android:textColor="#FFCC00"
             android:textSize="14sp"
             android:layout_gravity="center_horizontal" />
@@ -123,7 +122,6 @@
             android:id="@+id/player5_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chips: 1000"
             android:textSize="14sp"
             android:textColor="#444444"
             android:layout_gravity="center_horizontal"/>
@@ -151,7 +149,6 @@
             android:id="@+id/cards_player2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="--  --"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
 
@@ -159,7 +156,6 @@
             android:id="@+id/bet_player2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bet: 0"
             android:textColor="#FFCC00"
             android:textSize="14sp"
             android:layout_below="@id/player2_name"
@@ -168,7 +164,6 @@
             android:id="@+id/player2_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chips: 1000"
             android:textSize="14sp"
             android:textColor="#444444" />
     </LinearLayout>
@@ -195,7 +190,6 @@
             android:id="@+id/cards_player3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="--  --"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
 
@@ -203,7 +197,6 @@
             android:id="@+id/bet_player3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bet: 0"
             android:textColor="#FFCC00"
             android:textSize="14sp"
             android:layout_below="@id/player3_name"
@@ -213,7 +206,6 @@
             android:id="@+id/player3_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chips: 1000"
             android:textSize="14sp"
             android:textColor="#444444" />
     </LinearLayout>
@@ -240,7 +232,6 @@
             android:id="@+id/cards_player1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="--  --"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
 
@@ -248,7 +239,6 @@
             android:id="@+id/bet_player1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bet: 0"
             android:textColor="#FFCC00"
             android:textSize="14sp"
             android:layout_below="@id/player1_name"
@@ -258,7 +248,6 @@
             android:id="@+id/player1_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chips: 1000"
             android:textSize="14sp"
             android:textColor="#444444" />
     </LinearLayout>
@@ -285,7 +274,6 @@
             android:id="@+id/cards_player4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="--  --"
             android:textColor="@android:color/white"
             android:textSize="16sp" />
 
@@ -293,7 +281,6 @@
             android:id="@+id/bet_player4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Bet: 0"
             android:textColor="#FFCC00"
             android:textSize="14sp"
             android:layout_below="@id/player4_name"
@@ -303,7 +290,6 @@
             android:id="@+id/player4_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Chips: 1000"
             android:textSize="14sp"
             android:textColor="#444444" />
     </LinearLayout>

@@ -13,16 +13,19 @@
 
         <Button
             android:id="@+id/create_game_button"
-            android:layout_width="wrap_content"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="280dp"
             android:layout_height="wrap_content"
             android:layout_weight="6"
             android:text="Create New Game" />
 
         <Button
             android:id="@+id/BackFLbutton"
+            style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:backgroundTintMode="add"
             android:text="Back" />
     </LinearLayout>
 

@@ -1,6 +1,5 @@
 package com.example.poker;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -9,8 +8,6 @@ import android.widget.Toast;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FieldValue;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 
 import android.view.View;
@@ -19,6 +16,7 @@ import android.graphics.Typeface;
 
 import android.util.Log;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class GameActivity extends AppCompatActivity {
     private FirebaseFirestore db;
@@ -196,14 +194,39 @@ public class GameActivity extends AppCompatActivity {
                             deck.remove(hand.get(1).toString());
                         }
 
-                        Map<String, Object> chips = new HashMap<>();
-                        for (String uid : playerIds) {
-                            chips.put(uid, 1000);
-                        }
-                        chips.put(smallBlindPlayer, 1000 - small_blind);
-                        chips.put(bigBlindPlayer, 1000 - big_blind);
 
-                        lastRaise = 1;
+                        Map<String, Object> chips = new HashMap<>();
+
+                        AtomicInteger remaining = new AtomicInteger(playerIds.size());
+                        for (String uid : playerIds) {
+                            db.collection("players").document(uid).get()
+                                    .addOnSuccessListener(docSnapshot -> {
+                                        if (docSnapshot.exists()) {
+                                            Long money = docSnapshot.getLong("money");
+                                            if (money != null) {
+                                                chips.put(uid, money);
+                                            } else {
+                                                chips.put(uid, 5252L);
+                                            }
+                                        } else {
+                                            chips.put(uid, 5252L);
+                                        }
+                                        if (remaining.decrementAndGet() == 0) {
+                                            db.collection("games").document(gameId).update("chips", chips);
+                                        }
+                                    });
+                        }
+                        Object smallBlindValue = chips.get(smallBlindPlayer);
+                        Object bigBlindValue = chips.get(bigBlindPlayer);
+                        if (smallBlindValue instanceof Number && bigBlindValue instanceof Number) {
+                            int newSmall = ((Number) smallBlindValue).intValue() - small_blind;
+                            int newBig = ((Number) bigBlindValue).intValue() - big_blind;
+
+                            chips.put(smallBlindPlayer, newSmall);
+                            chips.put(bigBlindPlayer, newBig);
+                        }
+
+                        lastRaise = 0;
 
                         Map<String, Object> updates = new HashMap<>();
                         updates.put("deck", deck);
