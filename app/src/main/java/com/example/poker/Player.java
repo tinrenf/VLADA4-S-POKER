@@ -2,7 +2,7 @@ package com.example.poker;
 
 import java.util.*;
 public class Player {
-    public static final int START_MONEY = 1488;// базовое количество денег, выдаваемых игроку, как только он зарегестрировался
+    public static final int START_MONEY = 10000;// базовое количество денег, выдаваемых игроку, как только он зарегестрировался
     private String name;
     private int money;
     private String gameId;
