@@ -189,10 +189,11 @@ public class GameActivity extends AppCompatActivity {
                         }
 
                         deck = new ArrayList<>();
-                        String[] suits = {"S","H","D","C"};
-                        for(String s: suits){
+                        int[] suits = {1,2,3,4};
+                        for(int s: suits){
                             for(int r=2; r<=14; r++){
-                                deck.add(s + r);
+                                Card curCard = new Card(s, r);
+                                deck.add(curCard.toString());
                             }
                         }
                         Collections.shuffle(deck);
@@ -242,6 +243,7 @@ public class GameActivity extends AppCompatActivity {
                     if (currentChips - raiseAmount >= 0) {
                         chipsMap.put(currentPlayerID, currentChips - raiseAmount);
                         int prevBet = playerBets.getOrDefault(currentUID, 0);
+                        playerBets = (Map<String, Integer>) docSnapshot.get("playerBets");
                         playerBets.put(currentUID, prevBet + raiseAmount);
                         pot += raiseAmount;
                         cur_rate = prevBet + raiseAmount;
@@ -285,6 +287,7 @@ public class GameActivity extends AppCompatActivity {
 
                     if (currentChips - toCall >= 0) {
                         chipsMap.put(currentPlayerID, currentChips - toCall);
+                        playerBets = (Map<String, Integer>) docSnapshot.get("playerBets");
                         playerBets.put(currentUID, cur_rate);
                         pot += toCall;
                         Map<String, Object> updates = new HashMap<>();
@@ -365,6 +368,9 @@ public class GameActivity extends AppCompatActivity {
             }
 
             Map<String, Object> updates = new HashMap<>();
+
+            playerBets.clear();
+            updates.put("playerBets", playerBets);
 
             if ("preflop".equals(stage)) {
                 updates.put("stage", "flop");
