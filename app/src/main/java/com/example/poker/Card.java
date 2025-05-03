@@ -3,6 +3,7 @@ package com.example.poker;
 import java.util.*;
 
 public class Card implements Comparable<Card> {
+    // это надо чтобы текстуры приделывать
     static public String toImage(String s) {
         String p = "c";
         if (s.length() == 3) {
