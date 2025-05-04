@@ -5,9 +5,13 @@ import java.util.*;
 public class Card implements Comparable<Card> {
     // это надо чтобы текстуры приделывать
     static public String toImage(String s) {
-        String p = "c";
+        if (s.equals("🂠")) {
+            return "card_back";
+        }
+        String p = "c", v = "2";
         if (s.length() == 3) {
             p += "10";
+            v = "";
         } else {
             switch (s.charAt(0)) {
                 case 'J':
@@ -24,6 +28,7 @@ public class Card implements Comparable<Card> {
                     break;
                 default:
                     p += s.charAt(0);
+                    v = "";
             }
         }
         p += "_of_";
@@ -41,7 +46,7 @@ public class Card implements Comparable<Card> {
                 p += "clubs";
                 break;
         }
-        return p;
+        return p + v;
     }
     private int suit;
     // suit -- масть карты

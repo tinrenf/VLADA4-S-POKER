@@ -26,7 +26,7 @@ public class GameActivity extends AppCompatActivity {
     int big_blind = 50;
     int small_blind = big_blind / 2;
     int cur_rate = big_blind;
-    private TextView[] holeCardViews;
+    private ImageView[] holeCardViews1, holeCardViews2;
     private TextView[] playerViews;
     private TextView[] betViews;
     private List<String> playerIds = new ArrayList<>();
@@ -74,12 +74,20 @@ public class GameActivity extends AppCompatActivity {
                 findViewById(R.id.player4_name)
         };
 
-        holeCardViews = new TextView[]{
-                findViewById(R.id.cards_player5),
-                findViewById(R.id.cards_player1),
-                findViewById(R.id.cards_player2),
-                findViewById(R.id.cards_player3),
-                findViewById(R.id.cards_player4)
+        holeCardViews1 = new ImageView[]{
+                findViewById(R.id.card1_player5),
+                findViewById(R.id.card1_player1),
+                findViewById(R.id.card1_player2),
+                findViewById(R.id.card1_player3),
+                findViewById(R.id.card1_player4)
+        };
+
+        holeCardViews2 = new ImageView[]{
+                findViewById(R.id.card2_player5),
+                findViewById(R.id.card2_player1),
+                findViewById(R.id.card2_player2),
+                findViewById(R.id.card2_player3),
+                findViewById(R.id.card2_player4)
         };
 
         betViews = new TextView[]{
@@ -174,9 +182,10 @@ public class GameActivity extends AppCompatActivity {
                         Map<String, List<Card>> holeCards = PreFlop.deal(playerIds);
 
                         // Показываем карты у хоста
-                        for (int i = 0; i < playerIds.size() && i < holeCardViews.length; i++) {
+                        for (int i = 0; i < playerIds.size() && i < holeCardViews1.length; i++) {
                             List<Card> hand = holeCards.get(playerIds.get(i));
-                            holeCardViews[i].setText(hand.get(0).toString() + "  " + hand.get(1).toString());
+                            holeCardViews1[i].setImageResource(getResources().getIdentifier(Card.toImage(hand.get(0).toString()), "drawable", getPackageName()));
+                            holeCardViews2[i].setImageResource(getResources().getIdentifier(Card.toImage(hand.get(1).toString()), "drawable", getPackageName()));
                         }
 
                         // Сохраняем карты в Firestore
@@ -862,15 +871,17 @@ public class GameActivity extends AppCompatActivity {
             if (docSnapshot.contains("holeCards")) {
                 Map<String, List<String>> holeCardMap = (Map<String, List<String>>) docSnapshot.get("holeCards");
 
-                for (int i = 0; i < playerIds.size() && i < holeCardViews.length; i++) {
+                for (int i = 0; i < playerIds.size() && i < holeCardViews1.length; i++) {
                     String uid = playerIds.get(i);
                     if (holeCardMap.containsKey(uid)) {
                         List<String> cards = holeCardMap.get(uid);
 
                         if (uid.equals(currentUID)) {
-                            holeCardViews[i].setText(cards.get(0) + "  " + cards.get(1));
+                            holeCardViews1[i].setImageResource(getResources().getIdentifier(Card.toImage(cards.get(0)), "drawable", getPackageName()));
+                            holeCardViews2[i].setImageResource(getResources().getIdentifier(Card.toImage(cards.get(1)), "drawable", getPackageName()));
                         } else {
-                            holeCardViews[i].setText("🂠  🂠");
+                            holeCardViews1[i].setImageResource(getResources().getIdentifier(Card.toImage("🂠"), "drawable", getPackageName()));
+                            holeCardViews2[i].setImageResource(getResources().getIdentifier(Card.toImage("🂠"), "drawable", getPackageName()));
                         }
                     }
                 }
