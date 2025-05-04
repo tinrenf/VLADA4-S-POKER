@@ -25,6 +25,7 @@ public class Card implements Comparable<Card> {
                     break;
                 case 'A':
                     p += "ace";
+                    v = "";
                     break;
                 default:
                     p += s.charAt(0);
