@@ -131,7 +131,6 @@ public class GameListActivity extends AppCompatActivity {
         db.collection("games")
                 .add(game)
                 .addOnSuccessListener(documentReference -> {
-                    Log.d("CreateGame", "Game created with ID: " + documentReference.getId());
                     Toast.makeText(this, "Game created", Toast.LENGTH_SHORT).show();
 
                     Intent intent = new Intent(GameListActivity.this, GameActivity.class);//Переход в GameActivity
@@ -139,7 +138,6 @@ public class GameListActivity extends AppCompatActivity {
                     startActivity(intent);
                 })
                 .addOnFailureListener(e -> {
-                    Log.w("CreateGame", "Error adding game", e);
                     Toast.makeText(this, "Error creating game", Toast.LENGTH_SHORT).show();
                 });
     }

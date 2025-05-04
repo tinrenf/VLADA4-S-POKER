@@ -21,6 +21,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import android.content.Intent;
 import com.google.firebase.firestore.FieldValue;
 
+import android.os.Handler;
+import android.os.Looper;
+
 public class GameActivity extends AppCompatActivity {
     private String bebra = "bebra";
     private FirebaseFirestore db;
@@ -31,7 +34,7 @@ public class GameActivity extends AppCompatActivity {
     private TextView[] playerViews;
     private TextView[] betViews;
     private List<String> playerIds = new ArrayList<>();
-    private Button startButton, nextRound;
+    private Button startButton;
     private List<String> playerNames = new ArrayList<>();
     private String gameId;
 
@@ -50,6 +53,7 @@ public class GameActivity extends AppCompatActivity {
 
     private TextView[] chipViews;
     private List<String> playersRaisedThisRound = new ArrayList<>();
+    private List<String> joinAfterStart = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,20 +124,9 @@ public class GameActivity extends AppCompatActivity {
         startButton = findViewById(R.id.start_button);
         Button callButton = findViewById(R.id.button_call);
         Button raiseButton = findViewById(R.id.button_raise);
-        Button foldButton = findViewById(R.id.button_fold);
-        nextRound = findViewById(R.id.next_round);/**КНОПКИ**/
+        Button foldButton = findViewById(R.id.button_fold);/**КНОПКИ**/
 
         loadGameDetails(gameId);
-
-        nextRound.setOnClickListener(v -> {
-            if(currentUID.equals(creatorID)){
-                int newRound = round + 1;
-                if(newRound <= 3){
-                    db.collection("games").document(gameId)
-                            .update("round", newRound);
-                }
-            }
-        });
 
         startButton.setOnClickListener(v -> {
             db.collection("games").document(gameId).get()
@@ -164,23 +157,23 @@ public class GameActivity extends AppCompatActivity {
                                         }
                                     }
 
-                                    gameRef.update("currentPlayerID", currentPlayerID);
-                                    gameRef.update("currentBet", cur_rate);
-                                    gameRef.update("lastRaise", lastRaise);
+                                    Map<String, Object> updates = new HashMap<>();
+                                    Map<String, Integer> playerBets = new HashMap<>();
+
+                                    playerBets.put(smallBlindPlayer, small_blind);
+                                    playerBets.put(bigBlindPlayer, big_blind);
+
+                                    updates.put("playerBets", playerBets);
+                                    updates.put("status", "started");
+                                    updates.put("currentPlayerID", currentPlayerID);
+                                    updates.put("currentBet", cur_rate);
+                                    updates.put("lastRaise", lastRaise);
+                                    updates.put("pot", 0);
+                                    updates.put("stage", "preflop");
+
+                                    gameRef.update(updates);
                                 }
                             });
-
-                            Map<String, Object> updates = new HashMap<>();
-                            Map<String, Integer> playerBets = new HashMap<>();
-
-                            playerBets.put(smallBlindPlayer, small_blind);
-                            playerBets.put(bigBlindPlayer, big_blind);
-
-                            updates.put("playerBets", playerBets);
-                            updates.put("pot", 0);
-                            updates.put("stage", "preflop");
-
-                            db.collection("games").document(gameId).update(updates);
                         }
 
                         Map<String, List<Card>> holeCards = PreFlop.deal(playerIds);
@@ -229,7 +222,7 @@ public class GameActivity extends AppCompatActivity {
                                             if (money != null) {
                                                 chips.put(uid, money);
                                             } else {
-                                                chips.put(uid, 5252L);
+                                                chips.put(uid, 2525L);
                                             }
                                         } else {
                                             chips.put(uid, 5252L);
@@ -258,11 +251,7 @@ public class GameActivity extends AppCompatActivity {
                         updates.put("currentBet", cur_rate);
                         updates.put("chips", chips);
 
-                        db.collection("games").document(gameId)
-                                .update(updates)
-                                .addOnSuccessListener(aVoid -> Log.d("Game", "Игра началась"))
-                                .addOnFailureListener(e -> Log.w("Game", "Ошибка старта игры", e));
-
+                        db.collection("games").document(gameId).update(updates);
                         startButton.setVisibility(View.GONE);
                     });
         });//Когда нажали на кнопку старт
@@ -305,9 +294,9 @@ public class GameActivity extends AppCompatActivity {
                         gameRef.update(updates);
 
                         updatePotView();
-                        proceedToNextPlayer();
+                        proceedToNextPlayer(false);
                     } else {
-                        Toast.makeText(this, "Не хватает фишек для Raise", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Not enough chips to raise", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -332,7 +321,7 @@ public class GameActivity extends AppCompatActivity {
                     int toCall = cur_rate - prevBet;
 
                     if (toCall <= 0) {
-                        proceedToNextPlayer();
+                        proceedToNextPlayer(false);
                         return;
                     }
 
@@ -348,9 +337,9 @@ public class GameActivity extends AppCompatActivity {
 
                         gameRef.update(updates);
                         updatePotView();
-                        proceedToNextPlayer();
+                        proceedToNextPlayer(false);
                     } else {
-                        Toast.makeText(this, "Не хватает фишек для Call", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Not enough chips to call", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -367,8 +356,12 @@ public class GameActivity extends AppCompatActivity {
                     List<String> foldedList = (List<String>) docSnapshot.get("foldedPlayers");
                     if (foldedList == null) foldedList = new ArrayList<>();
 
+                    boolean fuckFold = false;
                     if (!foldedList.contains(currentUID)) {
                         foldedList.add(currentUID);
+                        if (currentUID.equals(lastRaise)) {
+                            fuckFold = true;
+                        }
                     }
 
                     Map<String, Object> updates = new HashMap<>();
@@ -384,7 +377,7 @@ public class GameActivity extends AppCompatActivity {
                             }
                         }
                     } else {
-                        proceedToNextPlayer();
+                        proceedToNextPlayer(fuckFold);
                     }
                 }
             });
@@ -594,8 +587,11 @@ public class GameActivity extends AppCompatActivity {
             Long pot = docSnapshot.getLong("pot");
             if (pot == null) pot = 0L;
 
-            Map<String, Long> chips = (Map<String, Long>) docSnapshot.get("chips");
-            if (chips == null) chips = new HashMap<>();
+            final Map<String, Long> chips = new HashMap<>();
+            Map<String, Long> fromDb = (Map<String, Long>) docSnapshot.get("chips");
+            if (fromDb != null) {
+                chips.putAll(fromDb);
+            }
 
             Long newWinnerMoney = pot;
             for (Map.Entry<String, Long> e : chips.entrySet()) {
@@ -609,6 +605,20 @@ public class GameActivity extends AppCompatActivity {
                 FirebaseFirestore.getInstance().collection("players")
                         .document(uid).update("money", money);
             }
+
+            final int award = pot.intValue();
+
+            db.collection("players").document(winner).get()
+                    .addOnSuccessListener(doc -> {
+                        String winnerName = doc.getString("name");
+                        gameRef.update(
+                                "winnerUid", winnerName,
+                                "award", award,
+                                "winnerDisplayed", false
+                        );
+                    });
+
+
 
             chips.put(winner, newWinnerMoney);
             pot = 0L;
@@ -798,7 +808,7 @@ public class GameActivity extends AppCompatActivity {
         });
     }
 
-    private void proceedToNextPlayer() {
+    private void proceedToNextPlayer(boolean fuckFold) {
         DocumentReference gameRef = db.collection("games").document(gameId);
 
         gameRef.get().addOnSuccessListener(docSnapshot -> {
@@ -832,6 +842,14 @@ public class GameActivity extends AppCompatActivity {
             if (nextPlayerUid.equals(lastRaiseUid)) {
                 proceedToNextStage();
             }
+
+            if (fuckFold) {
+                int lrid = playerIds.indexOf(lastRaise);
+                lrid = (lrid + 1) % (playerIds.size());
+                lastRaise = playerIds.get(lrid);
+            }
+
+            gameRef.update("lastRaise", lastRaise);
             gameRef.update("currentPlayerID", nextPlayerUid);
         });
     }
@@ -961,6 +979,14 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
 
+            if (docSnapshot.contains("joinAfterStart")) {
+                List<String> list = (List<String>) docSnapshot.get("foldedPlayers");
+                if (list != null) {
+                    joinAfterStart.clear();
+                    joinAfterStart.addAll(list);
+                }
+            }
+
             if (docSnapshot.contains("playersRaisedThisRound")) {
                 List<String> raisedList = (List<String>) docSnapshot.get("playersRaisedThisRound");
                 if (raisedList != null) {
@@ -979,14 +1005,21 @@ public class GameActivity extends AppCompatActivity {
 
             String newGameId = docSnapshot.getString("newGameId");
             if (newGameId != null && !newGameId.isEmpty()) {
-                // сбросим флаг, чтобы не зациклиться
                 gameRef.update("newGameId", FieldValue.delete());
-                // и запустим новую GameActivity
                 Intent intent = new Intent(GameActivity.this, GameActivity.class);
                 intent.putExtra("gameId", newGameId);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
+            }
+
+            Boolean disp = docSnapshot.getBoolean("winnerDisplayed");
+            String winner = docSnapshot.getString("winnerUid");
+            Long award = docSnapshot.getLong("award");
+            if (Boolean.FALSE.equals(disp) && winner != null && award != null) {
+                gameRef.update("winnerDisplayed", true);
+                String text = "Winner - " + winner + "\n+ " + award + " chips";
+                Toast.makeText(GameActivity.this, text, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -995,7 +1028,6 @@ public class GameActivity extends AppCompatActivity {
         int size = originalList.size();
         int index = originalList.indexOf(currentUserId);
         if (index < 0) {
-            // не нашли — возвращаем без изменений
             return new ArrayList<>(originalList);
         }
         List<String> reordered = new ArrayList<>(size);
@@ -1022,6 +1054,16 @@ public class GameActivity extends AppCompatActivity {
                             while (playerNames.size() <= index) playerNames.add("");
                             playerNames.set(index, name);
                             tv.setText(name);
+
+                            if (foldedPlayers.contains(uid)) {
+                                tv.setAlpha(0.5f);
+                                betViews[index].setAlpha(0.5f);
+                                chipViews[index].setAlpha(0.5f);
+                            } else {
+                                tv.setAlpha(1f);
+                                betViews[index].setAlpha(1f);
+                                chipViews[index].setAlpha(1f);
+                            }
 
                             if (uid.equals(currentPlayerID)) {
                                 tv.setTextColor(Color.RED);

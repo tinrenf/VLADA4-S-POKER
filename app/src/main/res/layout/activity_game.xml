@@ -122,7 +122,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:textColor="#FFCC00"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
 
         <LinearLayout
             android:id="@+id/cards_player5"
@@ -152,7 +152,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:textColor="#444444"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
     </LinearLayout>
 
     <!-- Игрок 2 слева сверху -->
@@ -181,7 +181,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:textColor="#FFCC00"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
 
         <LinearLayout
             android:id="@+id/cards_player2"
@@ -212,7 +212,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:textColor="#444444"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
     </LinearLayout>
 
     <!-- Игрок 3 справа сверху -->
@@ -241,7 +241,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:textColor="#FFCC00"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
 
         <LinearLayout
             android:id="@+id/cards_player3"
@@ -271,7 +271,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:textColor="#444444"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
     </LinearLayout>
 
     <!-- Игрок 1 слева по центру -->
@@ -300,7 +300,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:textColor="#FFCC00"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
 
         <LinearLayout
             android:id="@+id/cards_player1"
@@ -331,7 +331,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:textColor="#444444"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
     </LinearLayout>
 
     <!-- Игрок 4 справа по центру -->
@@ -360,7 +360,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:textColor="#FFCC00"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
 
         <LinearLayout
             android:id="@+id/cards_player4"
@@ -390,7 +390,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:textColor="#444444"
-            android:textSize="14sp" />
+            android:textSize="16sp" />
     </LinearLayout>
 
 </RelativeLayout>

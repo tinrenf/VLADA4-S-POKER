@@ -15,8 +15,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.DocumentReference;
 
-import java.util.List;
+import java.util.*;
 
 public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder> {
 
@@ -26,7 +27,7 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
 
     public GameAdapter(List<Game> games) {
         this.games = games;
-        this.context = null;  // fix in onCreateViewHolder
+        this.context = null;
         this.currentUserUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
     }
 
@@ -35,36 +36,57 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
     public GameViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.game_list_item, parent, false);
         return new GameViewHolder(view);
-    }//Не ебу что делает
+    }
 
     @Override
     public void onBindViewHolder(@NonNull GameViewHolder holder, int position) {
         Game game = games.get(position);
-        holder.gameInfo.setText("Game: " + game.getId() + "\nHost: " + game.getcreatorID());
-
+        String creatorID = game.getcreatorID();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("players")
+                .document(creatorID)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    holder.gameInfo.setText("Host: " + doc.getString("name"));
+                });
         holder.joinButton.setOnClickListener(v -> {
+            String uid = currentUserUid;
+            DocumentReference gameRef = FirebaseFirestore.getInstance()
+                    .collection("games")
+                    .document(game.getId());
+
             if (game.getPlayerIds().contains(currentUserUid)) {
-                Toast.makeText(v.getContext(), "Ты уже играешь долбаеб, крашнуть не получится. Иди лучше пососи", Toast.LENGTH_SHORT).show();
+                Toast.makeText(v.getContext(), "Ты уже играешь долбаеб. Попробуй пойти пососать, например, а не заниматься хуйней", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (game.getPlayerIds().size() >= game.getMaxPlayers()) {
-                Toast.makeText(v.getContext(), "I fucked your mum", Toast.LENGTH_SHORT).show();
+                Toast.makeText(v.getContext(), "I fucked yout mum", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            FirebaseFirestore.getInstance()
-                    .collection("games")
-                    .document(game.getId())
-                    .update("playerIds", FieldValue.arrayUnion(currentUserUid))
-                    .addOnSuccessListener(unused -> {
-                        Intent intent = new Intent(v.getContext(), GameActivity.class);
-                        intent.putExtra("gameId", game.getId());
-                        v.getContext().startActivity(intent);
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(v.getContext(), "Ты ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
+            gameRef.get().addOnSuccessListener(doc -> {
+                if (!doc.exists()) return;
+
+                Map<String,Object> updates = new HashMap<>();
+                updates.put("playerIds", FieldValue.arrayUnion(uid));
+
+                String status = doc.getString("status");
+                if ("started".equals(status)) {
+                    updates.put("foldedPlayers", FieldValue.arrayUnion(uid));
+                    updates.put("joinAfterStart", FieldValue.arrayUnion(uid));
+                }
+
+                gameRef.update(updates)
+                        .addOnSuccessListener(aVoid -> {
+                            Intent intent = new Intent(v.getContext(), GameActivity.class);
+                            intent.putExtra("gameId", game.getId());
+                            v.getContext().startActivity(intent);
+                        })
+                        .addOnFailureListener(e ->
+                                Toast.makeText(v.getContext(), "You are a mistake: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                        );
+            });
         });
     }
 
