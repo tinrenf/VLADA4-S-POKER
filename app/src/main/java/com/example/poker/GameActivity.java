@@ -45,7 +45,7 @@ public class GameActivity extends AppCompatActivity {
     private int round = 0;
     private String creatorID;
     private String currentPlayerID;
-    private int lastRaise = -1;
+    private String lastRaise = creatorID;
 
     private TextView[] chipViews;
     private List<String> playersRaisedThisRound = new ArrayList<>();
@@ -156,13 +156,16 @@ public class GameActivity extends AppCompatActivity {
                                     if (playerIds != null && !playerIds.isEmpty()) {
                                         if (playerIds.size() == 2) {
                                             currentPlayerID = playerIds.get(0);
+                                            lastRaise = currentPlayerID;
                                         } else if (playerIds.size() > 2) {
                                             currentPlayerID = playerIds.get(2);
+                                            lastRaise = currentPlayerID;
                                         }
                                     }
 
                                     gameRef.update("currentPlayerID", currentPlayerID);
                                     gameRef.update("currentBet", cur_rate);
+                                    gameRef.update("lastRaise", lastRaise);
                                 }
                             });
 
@@ -247,15 +250,12 @@ public class GameActivity extends AppCompatActivity {
                                     });
                         }
 
-                        lastRaise = 0;
-
                         Map<String, Object> updates = new HashMap<>();
                         updates.put("deck", deck);
                         updates.put("holeCards", holeCardStrings);
                         updates.put("gameStarted", true);
                         updates.put("currentBet", cur_rate);
                         updates.put("chips", chips);
-                        updates.put("lastRaise", lastRaise);
 
                         db.collection("games").document(gameId)
                                 .update(updates)
@@ -299,7 +299,7 @@ public class GameActivity extends AppCompatActivity {
                         updates.put("chips", chipsMap);
                         updates.put("playerBets", playerBets);
                         updates.put("currentBet", cur_rate);
-                        updates.put("lastRaise", playerIds.indexOf(currentUID));
+                        updates.put("lastRaise", currentUID);
                         updates.put("playersRaisedThisRound", playersRaisedThisRound);
                         gameRef.update(updates);
 
@@ -803,23 +803,34 @@ public class GameActivity extends AppCompatActivity {
         gameRef.get().addOnSuccessListener(docSnapshot -> {
             if (!docSnapshot.exists()) return;
 
-            int currentIndex = playerIds.indexOf(currentPlayerID);
-            int nextIndex = (currentIndex + 1) % playerIds.size();
+            List<String> originalPlayerIds = (List<String>) docSnapshot.get("playerIds");
+            if (originalPlayerIds == null || originalPlayerIds.isEmpty()) return;
+
+            String currentPlayerID = docSnapshot.getString("currentPlayerID");
+            String lastRaiseUid = docSnapshot.getString("lastRaise");
+
+            if (currentPlayerID == null) return;
+
+            int currentIndex = originalPlayerIds.indexOf(currentPlayerID);
+            int nextIndex = (currentIndex + 1) % originalPlayerIds.size();
 
             List<String> foldedPlayers = (List<String>) docSnapshot.get("foldedPlayers");
             if (foldedPlayers == null) foldedPlayers = new ArrayList<>();
 
-            int originalIndex = nextIndex;
-            while (foldedPlayers.contains(playerIds.get(originalIndex))) {
-                originalIndex = (originalIndex + 1) % playerIds.size();
+            // Найти следующего не сфолдившего игрока
+            int loopStart = nextIndex;
+            while (foldedPlayers.contains(originalPlayerIds.get(nextIndex))) {
+                nextIndex = (nextIndex + 1) % originalPlayerIds.size();
+                if (nextIndex == loopStart) {
+                    proceedToNextStage();
+                    return;
+                }
             }
-            nextIndex = originalIndex;
 
-            if (nextIndex == lastRaise) {
+            String nextPlayerUid = originalPlayerIds.get(nextIndex);
+            if (nextPlayerUid.equals(lastRaiseUid)) {
                 proceedToNextStage();
             }
-            List<String> playerIds = (List<String>) docSnapshot.get("playerIds");
-            String nextPlayerUid = playerIds.get(nextIndex);
             gameRef.update("currentPlayerID", nextPlayerUid);
         });
     }
@@ -859,6 +870,7 @@ public class GameActivity extends AppCompatActivity {
                 playerIds.clear();
                 playerIds.addAll(game.getPlayerIds());
                 startButton.setEnabled(playerIds.size() > 1);
+                playerIds = reorderPlayers(playerIds, currentUID);
                 displayPlayerNames();
 
                 if (creatorID != null && creatorID.equals(currentUID) && (gameStarted == null || !gameStarted)) {
@@ -932,9 +944,9 @@ public class GameActivity extends AppCompatActivity {
             }
 
             if (docSnapshot.contains("lastRaise")) {
-                Long lastRaiseLong = docSnapshot.getLong("lastRaise");
-                if (lastRaiseLong != null) {
-                    lastRaise = lastRaiseLong.intValue();
+                String lastRaiseTM = docSnapshot.getString("lastRaise");
+                if (lastRaiseTM != null) {
+                    lastRaise = lastRaiseTM;
                 }
             }
 
@@ -944,7 +956,7 @@ public class GameActivity extends AppCompatActivity {
                 for (int i = 0; i < playerIds.size() && i < chipViews.length; i++) {
                     String uid = playerIds.get(i);
                     long chips = chipMap.getOrDefault(uid, 0L);
-                    chipViews[i].setText("Chips: " + chips);  // TextView фишек
+                    chipViews[i].setText("Chips: " + chips);
                 }
             }
 
@@ -976,6 +988,21 @@ public class GameActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+    private List<String> reorderPlayers(List<String> originalList, String currentUserId) {
+        int size = originalList.size();
+        int index = originalList.indexOf(currentUserId);
+        if (index < 0) {
+            // не нашли — возвращаем без изменений
+            return new ArrayList<>(originalList);
+        }
+        List<String> reordered = new ArrayList<>(size);
+        for (int offset = 0; offset < size; offset++) {
+            int i = (index + offset) % size;
+            reordered.add(originalList.get(i));
+        }
+        return reordered;
     }
 
     private void displayPlayerNames() {

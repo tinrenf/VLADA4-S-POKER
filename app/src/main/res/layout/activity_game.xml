@@ -11,8 +11,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_above="@id/start_button"
-        android:layout_marginBottom="275dp">
+        android:layout_above="@id/player1"
+        android:layout_marginBottom="22dp">
 
         <ImageView android:id="@+id/card_comm1" style="@style/CommCard"/>
         <ImageView android:id="@+id/card_comm2" style="@style/CommCard"/>
@@ -86,8 +86,8 @@
     <!-- Игрок 0 над кнопками -->
     <LinearLayout
         android:id="@+id/player0"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="90dp"
+        android:layout_height="140dp"
         android:layout_above="@id/action_buttons"
         android:layout_centerHorizontal="true"
         android:orientation="vertical"
@@ -97,45 +97,60 @@
             android:id="@+id/player5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:text="--"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:layout_gravity="center_horizontal" />
+            android:textSize="18sp" />
 
         <TextView
             android:id="@+id/bet_player5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:textColor="#FFCC00"
-            android:textSize="14sp"
-            android:layout_gravity="center_horizontal" />
+            android:textSize="14sp" />
 
-        <TextView
+        <LinearLayout
             android:id="@+id/cards_player5"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="--  --"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:layout_gravity="center_horizontal" />
+            android:layout_width="55dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/card1_player5"
+                android:layout_width="24dp"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:layout_width="7dp"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:id="@+id/card2_player5"
+                android:layout_width="24dp"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+
         <TextView
             android:id="@+id/player5_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
+            android:layout_gravity="center_horizontal"
             android:textColor="#444444"
-            android:layout_gravity="center_horizontal"/>
+            android:textSize="14sp" />
     </LinearLayout>
 
     <!-- Игрок 2 слева сверху -->
     <LinearLayout
         android:id="@+id/player2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_width="85dp"
+        android:layout_height="130dp"
         android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:gravity="center">
 
         <TextView
             android:id="@+id/player2_name"
@@ -146,37 +161,55 @@
             android:textSize="18sp" />
 
         <TextView
-            android:id="@+id/cards_player2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-
-        <TextView
             android:id="@+id/bet_player2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
             android:textColor="#FFCC00"
-            android:textSize="14sp"
-            android:layout_below="@id/player2_name"
-            android:layout_centerHorizontal="true"/>
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/cards_player2"
+            android:layout_width="50dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/card1_player2"
+                android:layout_width="23dp"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:layout_width="4dp"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:id="@+id/card2_player2"
+                android:layout_width="23dp"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+
+
+
         <TextView
             android:id="@+id/player2_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="#444444" />
+            android:textColor="#444444"
+            android:textSize="14sp" />
     </LinearLayout>
 
     <!-- Игрок 3 справа сверху -->
     <LinearLayout
         android:id="@+id/player3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="85dp"
+        android:layout_height="130dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:gravity="center">
 
         <TextView
             android:id="@+id/player3_name"
@@ -187,38 +220,53 @@
             android:textSize="18sp" />
 
         <TextView
-            android:id="@+id/cards_player3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-
-        <TextView
             android:id="@+id/bet_player3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
             android:textColor="#FFCC00"
-            android:textSize="14sp"
-            android:layout_below="@id/player3_name"
-            android:layout_centerHorizontal="true"/>
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/cards_player3"
+            android:layout_width="50dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/card1_player3"
+                android:layout_width="23dp"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:layout_width="4dp"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:id="@+id/card2_player3"
+                android:layout_width="23dp"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/player3_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="#444444" />
+            android:textColor="#444444"
+            android:textSize="14sp" />
     </LinearLayout>
 
     <!-- Игрок 1 слева по центру -->
     <LinearLayout
         android:id="@+id/player1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
+        android:layout_width="85dp"
+        android:layout_height="130dp"
         android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:gravity="center">
 
         <TextView
             android:id="@+id/player1_name"
@@ -229,38 +277,55 @@
             android:textSize="18sp" />
 
         <TextView
-            android:id="@+id/cards_player1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-
-        <TextView
             android:id="@+id/bet_player1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
             android:textColor="#FFCC00"
-            android:textSize="14sp"
-            android:layout_below="@id/player1_name"
-            android:layout_centerHorizontal="true"/>
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/cards_player1"
+            android:layout_width="50dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/card1_player1"
+                android:layout_width="23dp"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:layout_width="4dp"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:id="@+id/card2_player1"
+                android:layout_width="23dp"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
+
+
 
         <TextView
             android:id="@+id/player1_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="#444444" />
+            android:textColor="#444444"
+            android:textSize="14sp" />
     </LinearLayout>
 
     <!-- Игрок 4 справа по центру -->
     <LinearLayout
         android:id="@+id/player4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
+        android:layout_width="85dp"
+        android:layout_height="130dp"
         android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:gravity="center">
 
         <TextView
             android:id="@+id/player4_name"
@@ -271,27 +336,41 @@
             android:textSize="18sp" />
 
         <TextView
-            android:id="@+id/cards_player4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-
-        <TextView
             android:id="@+id/bet_player4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
             android:textColor="#FFCC00"
-            android:textSize="14sp"
-            android:layout_below="@id/player4_name"
-            android:layout_centerHorizontal="true"/>
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:id="@+id/cards_player4"
+            android:layout_width="50dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/card1_player4"
+                android:layout_width="23dp"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:layout_width="4dp"
+                android:layout_height="match_parent"/>
+
+            <ImageView
+                android:id="@+id/card2_player4"
+                android:layout_width="23dp"
+                android:layout_height="match_parent"/>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/player4_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="#444444" />
+            android:textColor="#444444"
+            android:textSize="14sp" />
     </LinearLayout>
 
 </RelativeLayout>
