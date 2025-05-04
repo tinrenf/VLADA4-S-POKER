@@ -22,6 +22,7 @@ import android.content.Intent;
 import com.google.firebase.firestore.FieldValue;
 
 public class GameActivity extends AppCompatActivity {
+    private String bebra = "bebra";
     private FirebaseFirestore db;
     int big_blind = 50;
     int small_blind = big_blind / 2;
