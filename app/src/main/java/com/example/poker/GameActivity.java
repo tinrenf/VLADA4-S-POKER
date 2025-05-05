@@ -21,11 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import android.content.Intent;
 import com.google.firebase.firestore.FieldValue;
 
-import android.os.Handler;
-import android.os.Looper;
-
 public class GameActivity extends AppCompatActivity {
-    private String bebra = "bebra";
     private FirebaseFirestore db;
     int big_blind = 50;
     int small_blind = big_blind / 2;
@@ -384,12 +380,7 @@ public class GameActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Оценивает силу 7‑карточной руки по правилам Техас‑холдем:
-     * категории: straight flush, quads, full house, flush, straight, trips, two pair, one pair, high card.
-     * Возвращает число типа long, где более старшие биты — категория, младшие — кикеры.
-     */
-    private long evaluateHandStrength(List<String> cards7) {
+    private long evaluateHandStrength(List<String> cards7) { //оценка силы комбинации
         List<Integer> ranks = new ArrayList<>();
         List<Character> suits = new ArrayList<>();
 
@@ -421,9 +412,8 @@ public class GameActivity extends AppCompatActivity {
         }
         if (ranks.size() != 7) {
             throw new IllegalStateException(
-                    "Невозможно оценить руку — получено " + ranks.size() + " карт: " + cards7);
+                    "Получено " + ranks.size() + " карт: " + cards7);
         }
-        // 2) frequency по рангу и по масти
         Map<Integer, Integer> cnt = new HashMap<>();
         Map<Character, List<Integer>> bySuit = new HashMap<>();
         for (int i = 0; i < ranks.size(); i++) {
@@ -432,23 +422,22 @@ public class GameActivity extends AppCompatActivity {
             cnt.put(r, cnt.getOrDefault(r, 0) + 1);
             bySuit.computeIfAbsent(s, k -> new ArrayList<>()).add(r);
         }
-        // 3) проверка на стрит-флеш
+        // 1) sf
         for (List<Integer> sameSuitRanks : bySuit.values()) {
             if (sameSuitRanks.size() >= 5) {
                 long sf = findStraightScore(sameSuitRanks);
                 if (sf > 0) {
-                    // категория 8 = straight flush
                     return (8L << 20) | sf;
                 }
             }
         }
-        // 4) кикеры: упорядочим ранги по count desc, rank desc
+        // 2)ранги кикеров
         List<Integer> uniq = new ArrayList<>(cnt.keySet());
         uniq.sort((a, b) -> {
             int c = cnt.get(b).compareTo(cnt.get(a));
             return c != 0 ? c : b.compareTo(a);
         });
-        // 5) four, fullhouse, trips, two pair, one pair?
+
         int four = -1, three = -1;
         List<Integer> pairs = new ArrayList<>();
         for (int r : uniq) {
@@ -458,7 +447,7 @@ public class GameActivity extends AppCompatActivity {
             else if (f == 2) pairs.add(r);
         }
         if (four >= 0) {
-            // quads + best kicker
+            //3)каре + кикер
             int kicker = 0;
             for (int rnk : uniq) {
                 if (rnk != four) {
@@ -469,26 +458,24 @@ public class GameActivity extends AppCompatActivity {
             return (7L<<20) | ((long)four<<16) | ((long)kicker<<12);
         }
         if (three >= 0 && !pairs.isEmpty()) {
-            // full house: trips rank, best pair rank
+            // 4)fh
             int pair = pairs.get(0);
             return (6L << 20) | ((long) three << 16) | ((long) pair << 12);
         }
-        // 6) flush
+        // 5) флеш
         for (List<Integer> sameSuitRanks : bySuit.values()) {
             if (sameSuitRanks.size() >= 5) {
                 sameSuitRanks.sort(Comparator.reverseOrder());
-                // возьмём топ‑5 кикеров
                 long score = 0;
                 for (int i = 0; i < 5; i++) score |= ((long) sameSuitRanks.get(i) << (16 - 4 * i));
                 return (5L << 20) | score;
             }
         }
-        // 7) straight
+        // 6) стрит
         long st = findStraightScore(ranks);
         if (st > 0) return (4L << 20) | st;
-        // 8) trips
+        // 7) сет + 2 кикера
         if (three >= 0) {
-            // трипс + два лучших кикера
             List<Integer> kickers = new ArrayList<>();
             for (int r : uniq) if (r != three) kickers.add(r);
             return (3L << 20)
@@ -496,7 +483,7 @@ public class GameActivity extends AppCompatActivity {
                     | ((long) kickers.get(0) << 12)
                     | ((long) kickers.get(1) << 8);
         }
-        // 9) two pair
+        // 8) 2 пары + кикер
         if (pairs.size() >= 2) {
             int hi = pairs.get(0), lo = pairs.get(1);
             int kicker = uniq.stream().filter(r -> r != hi && r != lo).findFirst().orElse(0);
@@ -505,7 +492,7 @@ public class GameActivity extends AppCompatActivity {
                     | ((long) lo << 12)
                     | ((long) kicker << 8);
         }
-        // 10) one pair
+        // 9) пара + 3 кикера
         if (pairs.size() == 1) {
             int pr = pairs.get(0);
             List<Integer> kickers = new ArrayList<>();
@@ -516,7 +503,7 @@ public class GameActivity extends AppCompatActivity {
                     | ((long) kickers.get(1) << 8)
                     | ((long) kickers.get(2) << 4);
         }
-        // 11) high card: топ‑5
+        // 11) старшая карта
         List<Integer> hc = new ArrayList<>(uniq);
         hc.sort(Comparator.reverseOrder());
         long code = 0;
@@ -524,10 +511,9 @@ public class GameActivity extends AppCompatActivity {
         return (0L << 20) | code;
     }
 
-    /** Ищет стрит в любом наборе рангов, возвращает 20‑битный код кикеров (старшая карта в младших 4‑битах) или 0 */
     private long findStraightScore(List<Integer> ranks) {
         Set<Integer> u = new HashSet<>(ranks);
-        // туз может быть и 1 для A‑2‑3‑4‑5
+        //A‑2‑3‑4‑5
         if (u.contains(14)) u.add(1);
         List<Integer> ur = new ArrayList<>(u);
         Collections.sort(ur);
@@ -539,7 +525,6 @@ public class GameActivity extends AppCompatActivity {
             } else consec = 1;
         }
         if (bestHigh > 0) {
-            // кодируем 5 карт стрит‑кикеров: bestHigh, bestHigh-1 ... bestHigh-4
             long s = 0;
             for (int k = 0; k < 5; k++) {
                 s |= ((long) (bestHigh - k) << (16 - 4 * k));
@@ -828,7 +813,7 @@ public class GameActivity extends AppCompatActivity {
             List<String> foldedPlayers = (List<String>) docSnapshot.get("foldedPlayers");
             if (foldedPlayers == null) foldedPlayers = new ArrayList<>();
 
-            // Найти следующего не сфолдившего игрока
+            //след не скинувший карты. Менять, если меняем порядок игроков
             int loopStart = nextIndex;
             while (foldedPlayers.contains(originalPlayerIds.get(nextIndex))) {
                 nextIndex = (nextIndex + 1) % originalPlayerIds.size();
@@ -925,7 +910,6 @@ public class GameActivity extends AppCompatActivity {
 
             Object d = docSnapshot.get("deck");
             if (d instanceof List) {
-                //noinspection unchecked
                 deck = (List<String>) d;
             } else {
                 deck = new ArrayList<>();
@@ -1075,7 +1059,7 @@ public class GameActivity extends AppCompatActivity {
                         })
                         .addOnFailureListener(e -> tv.setText("(error)"));
             } else {
-                tv.setText("xxx");
+                tv.setText(".");
             }
         }
     }

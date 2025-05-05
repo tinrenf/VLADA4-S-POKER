@@ -6,15 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Класс для выполнения фазы pre-flop: тасовка колоды и раздача по 2 карты каждому игроку.
- */
-public class PreFlop {
-    /**
-     * Раздать по 2 карты каждому игроку.
-     * @param playerIds список UID игроков (в порядке позиций за столом)
-     * @return карта каждому UID: список из двух карт
-     */
+public class PreFlop {//Он не бесполезен, честно
     public static Map<String, List<Card>> deal(List<String> playerIds) {
         Deck deck = new Deck();
         deck.shuffle();

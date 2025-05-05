@@ -56,12 +56,12 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
                     .document(game.getId());
 
             if (game.getPlayerIds().contains(currentUserUid)) {
-                Toast.makeText(v.getContext(), "Ты уже играешь долбаеб. Попробуй пойти пососать, например, а не заниматься хуйней", Toast.LENGTH_SHORT).show();
+                Toast.makeText(v.getContext(), "In game", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (game.getPlayerIds().size() >= game.getMaxPlayers()) {
-                Toast.makeText(v.getContext(), "I fucked yout mum", Toast.LENGTH_SHORT).show();
+                Toast.makeText(v.getContext(), "max players", Toast.LENGTH_SHORT).show();
                 return;
             }
 

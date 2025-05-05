@@ -3,7 +3,7 @@ package com.example.poker;
 import com.google.firebase.Timestamp;
 import java.util.*;
 
-public class Game { //Эта штука для датабазы firebase
+public class Game { //Эта штука для firebase, когда в начале создаем игру
     private String id;
     private String creatorID;
     private List<String> playerIds;
@@ -20,7 +20,6 @@ public class Game { //Эта штука для датабазы firebase
 
     public Game() { }
 
-    // Геттеры и сеттеры
     public String getId() {
         return id;
     }
@@ -55,9 +54,5 @@ public class Game { //Эта штука для датабазы firebase
 
     public Timestamp getTimestamp() {
         return timestamp;
-    }
-
-    public void setTimestamp(Timestamp timestamp) {
-        this.timestamp = timestamp;
     }
 }

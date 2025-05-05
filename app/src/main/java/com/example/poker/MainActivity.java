@@ -65,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
                             playerChips.setText("Chips: " + chips);
                         } else {
                             playerName.setText("Player not found");
-                            playerName.setText("Player not found");
                         }
                     })
                     .addOnFailureListener(e -> {

@@ -133,8 +133,8 @@ public class GameListActivity extends AppCompatActivity {
                 .addOnSuccessListener(documentReference -> {
                     Toast.makeText(this, "Game created", Toast.LENGTH_SHORT).show();
 
-                    Intent intent = new Intent(GameListActivity.this, GameActivity.class);//Переход в GameActivity
-                    intent.putExtra("gameId", documentReference.getId()); // передаем ID игры
+                    Intent intent = new Intent(GameListActivity.this, GameActivity.class);//в GameActivity
+                    intent.putExtra("gameId", documentReference.getId());
                     startActivity(intent);
                 })
                 .addOnFailureListener(e -> {

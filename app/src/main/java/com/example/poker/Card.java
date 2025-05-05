@@ -50,15 +50,11 @@ public class Card implements Comparable<Card> {
         return p + v;
     }
     private int suit;
-    // suit -- масть карты
     // 1 -- пики
     // 2 -- червы
     // 3 -- бубы
-    // 4 -- крести(трефы)
+    // 4 -- крести(трефы). Но это все если храним как адекватные люди
     private int rank;
-
-    // rank -- достоинство карты
-    // 2-10 -- 2-10
     // валет -- 11
     // дама -- 12
     // король -- 13
@@ -95,14 +91,13 @@ public class Card implements Comparable<Card> {
                 break;  // бубны
             case 4:
                 s = "♣";
-                break;  // трефы
+                break;  // крести
             default:
                 s = "?";
         }
         return r + s;
     }
 
-    // конструкторы
     Card(int suit, int rank) {
         this.suit = suit;
         this.rank = rank;
@@ -112,16 +107,6 @@ public class Card implements Comparable<Card> {
         this(0, 0);
     }
 
-    // геттеры
-    public int getSuit() {
-        return suit;
-    }
-
-    public int getRank() {
-        return rank;
-    }
-
-    // компаратор(сравнивает только достоинства)
     public int compareTo(Card o) {
         return Integer.compare(rank, o.rank);
     }
