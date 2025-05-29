@@ -1,21 +1,42 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/game_item_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
 
     <TextView
-        android:id="@+id/game_info"
+        android:id="@+id/game_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Game Info"
-        android:textSize="16sp" />
+        android:text="Game Name"
+        android:textStyle="bold"
+        android:textSize="18sp" />
 
-    <Button
-        android:id="@+id/btn_join"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/host_name"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Join Game"
-        android:layout_marginTop="8dp"/>
+        android:text="Host: ..." />
+
+    <TextView
+        android:id="@+id/player_count"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Players: 0/5" />
+
+    <TextView
+        android:id="@+id/player_names"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Players: ..." />
+
+    <TextView
+        android:id="@+id/blinds_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Blinds: 50/25" />
 </LinearLayout>

@@ -182,7 +182,7 @@ public class GameActivity extends AppCompatActivity {
 
                         Map<String, List<Card>> holeCards = PreFlop.deal(playerIds);
 
-                        // Показываем карты у хоста
+                        // Показываем карты у игроков
                         for (int i = 0; i < playerIds.size() && i < holeCardViews1.length; i++) {
                             List<Card> hand = holeCards.get(playerIds.get(i));
                             holeCardViews1[i].setImageResource(getResources().getIdentifier(Card.toImage(hand.get(0).toString()), "drawable", getPackageName()));
@@ -200,8 +200,8 @@ public class GameActivity extends AppCompatActivity {
 
                         deck = new ArrayList<>();
                         int[] suits = {1,2,3,4};
-                        for(int s: suits){
-                            for(int r=2; r<=14; r++){
+                        for(int s: suits) {
+                            for (int r = 2; r <= 14; r++) {
                                 Card curCard = new Card(s, r);
                                 deck.add(curCard.toString());
                             }
@@ -631,6 +631,7 @@ public class GameActivity extends AppCompatActivity {
                 newGame.put("status", "waiting");
                 newGame.put("timestamp", FieldValue.serverTimestamp());
                 newGame.put("chips", doc.get("chips"));
+                newGame.put("bigBlind", big_blind);
 
                 db.collection("games")
                         .add(newGame)
@@ -697,6 +698,7 @@ public class GameActivity extends AppCompatActivity {
                 newGame.put("status", "waiting");
                 newGame.put("timestamp", FieldValue.serverTimestamp());
                 newGame.put("chips", doc.get("chips"));
+                newGame.put("bigBlind", big_blind);
 
                 db.collection("games")
                         .add(newGame)

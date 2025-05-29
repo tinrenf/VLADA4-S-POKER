@@ -9,16 +9,27 @@ public class Game { //Эта штука для firebase, когда в нача�
     private List<String> playerIds;
     private int maxPlayers;
     private Timestamp timestamp;
+    private String name;
+    private long bigBlind;
 
-    public Game(String id, String creatorID, List<String> playerIds, int maxPlayers, Timestamp timestamp) {
+    public Game(String name, String id, String creatorID, List<String> playerIds, int maxPlayers, Timestamp timestamp) {
         this.id = id;
         this.creatorID = creatorID;
         this.playerIds = playerIds;
         this.maxPlayers = maxPlayers;
         this.timestamp = timestamp;
+        this.name = name;
     }
 
     public Game() { }
+
+    public long getBigBlind() {
+        return bigBlind;
+    }
+
+    public String getName() {
+        return name;
+    }
 
     public String getId() {
         return id;

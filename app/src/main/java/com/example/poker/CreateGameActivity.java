@@ -62,7 +62,6 @@ public class CreateGameActivity extends AppCompatActivity {
         game.put("maxPlayers", 5);
         game.put("status", "waiting");
         game.put("timestamp", FieldValue.serverTimestamp());
-
         game.put("name", gameName);
         game.put("bigBlind", bigBlind);
 

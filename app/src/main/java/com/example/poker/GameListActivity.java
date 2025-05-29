@@ -63,7 +63,7 @@ public class GameListActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.game_list_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         gameList = new ArrayList<>();
-        adapter = new GameAdapter(gameList);
+        adapter = new GameAdapter(gameList, this);
         recyclerView.setAdapter(adapter);
 
         createGameButton = findViewById(R.id.create_game_button);
