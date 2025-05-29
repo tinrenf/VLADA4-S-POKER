@@ -23,7 +23,6 @@ import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FieldValue;
 
-
 import java.util.*;
 
 public class GameListActivity extends AppCompatActivity {
@@ -68,7 +67,10 @@ public class GameListActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         createGameButton = findViewById(R.id.create_game_button);
-        createGameButton.setOnClickListener(v -> createNewGame());
+        createGameButton.setOnClickListener(v -> {
+            Intent intent = new Intent(GameListActivity.this, CreateGameActivity.class);
+            startActivity(intent);
+        });
 
         BackButton = findViewById(R.id.BackFLbutton);
         BackButton.setOnClickListener(v -> {

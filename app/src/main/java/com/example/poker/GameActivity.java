@@ -23,9 +23,9 @@ import com.google.firebase.firestore.FieldValue;
 
 public class GameActivity extends AppCompatActivity {
     private FirebaseFirestore db;
-    int big_blind = 50;
-    int small_blind = big_blind / 2;
-    int cur_rate = big_blind;
+    int big_blind = 0;
+    int small_blind = 0;
+    int cur_rate = 0;
     private ImageView[] holeCardViews1, holeCardViews2;
     private TextView[] playerViews;
     private TextView[] betViews;
@@ -61,12 +61,6 @@ public class GameActivity extends AppCompatActivity {
         gameId = getIntent().getStringExtra("gameId");
         currentUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
         potView = findViewById(R.id.pot_text);
-
-        playerIds = getIntent().getStringArrayListExtra("playerIds");
-
-        if (playerIds == null) {
-            playerIds = new ArrayList<>();
-        }
 
         playerViews = new TextView[]{findViewById(R.id.player5),
                 findViewById(R.id.player1_name),
@@ -116,6 +110,20 @@ public class GameActivity extends AppCompatActivity {
         };
 
         db = FirebaseFirestore.getInstance();
+
+        db.collection("games").document(gameId).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                List<String> ids = (List<String>) documentSnapshot.get("playerIds");
+                if (ids != null) {
+                    playerIds = new ArrayList<>(ids);
+                }
+                Long bigBlindLong = documentSnapshot.getLong("bigBlind");
+                if (bigBlindLong != null) {
+                    big_blind = bigBlindLong.intValue();
+                    small_blind = big_blind / 2;
+                }
+            }
+        });
 
         startButton = findViewById(R.id.start_button);
         Button callButton = findViewById(R.id.button_call);
