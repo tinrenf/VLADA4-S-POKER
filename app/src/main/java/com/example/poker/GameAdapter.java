@@ -136,7 +136,7 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
     }
     static class GameViewHolder extends RecyclerView.ViewHolder {
         TextView gameName, hostName, playerCount, playerNames, blindsInfo;
-        GameViewHolder(@NonNull View itemView) {
+        GameViewHolder(View itemView) {
             super(itemView);
             gameName = itemView.findViewById(R.id.game_name);
             hostName = itemView.findViewById(R.id.host_name);

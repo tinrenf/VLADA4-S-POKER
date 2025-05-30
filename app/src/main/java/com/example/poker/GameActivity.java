@@ -51,6 +51,8 @@ public class GameActivity extends AppCompatActivity {
     private List<String> playersRaisedThisRound = new ArrayList<>();
     private List<String> joinAfterStart = new ArrayList<>();
 
+    private String gameName;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -122,6 +124,7 @@ public class GameActivity extends AppCompatActivity {
                     big_blind = bigBlindLong.intValue();
                     small_blind = big_blind / 2;
                 }
+                gameName = documentSnapshot.getString("name");
             }
         });
 
@@ -612,7 +615,6 @@ public class GameActivity extends AppCompatActivity {
                     });
 
 
-
             chips.put(winner, newWinnerMoney);
             pot = 0L;
             gameUpdates.put("pot", pot);
@@ -624,7 +626,7 @@ public class GameActivity extends AppCompatActivity {
                 if (!doc.exists()) return;
 
                 List<String> players = (List<String>) doc.get("playerIds");
-                Map<String,Object> newGame = new HashMap<>();
+                Map<String, Object> newGame = new HashMap<>();
                 newGame.put("creatorID", creatorID);
                 newGame.put("playerIds", players);
                 newGame.put("maxPlayers", 5);
@@ -632,6 +634,7 @@ public class GameActivity extends AppCompatActivity {
                 newGame.put("timestamp", FieldValue.serverTimestamp());
                 newGame.put("chips", doc.get("chips"));
                 newGame.put("bigBlind", big_blind);
+                newGame.put("name", gameName);
 
                 db.collection("games")
                         .add(newGame)
@@ -699,6 +702,7 @@ public class GameActivity extends AppCompatActivity {
                 newGame.put("timestamp", FieldValue.serverTimestamp());
                 newGame.put("chips", doc.get("chips"));
                 newGame.put("bigBlind", big_blind);
+                newGame.put("name", gameName);
 
                 db.collection("games")
                         .add(newGame)
@@ -999,12 +1003,28 @@ public class GameActivity extends AppCompatActivity {
 
             String newGameId = docSnapshot.getString("newGameId");
             if (newGameId != null && !newGameId.isEmpty()) {
-                gameRef.update("newGameId", FieldValue.delete());
-                Intent intent = new Intent(GameActivity.this, GameActivity.class);
-                intent.putExtra("gameId", newGameId);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                finish();
+                String oldGameID = gameId;
+                FirebaseFirestore db = FirebaseFirestore.getInstance();
+                if (currentUID.equals(creatorID)) {
+                    DocumentReference oldGameRef = db.collection("games").document(oldGameID);
+
+                    oldGameRef.update("newGameId", FieldValue.delete())
+                            .addOnSuccessListener(aVoid -> {
+                                oldGameRef.delete().addOnSuccessListener(aVoid2 -> {
+                                    Intent intent = new Intent(GameActivity.this, GameActivity.class);
+                                    intent.putExtra("gameId", newGameId);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(intent);
+                                    finish();
+                                });
+                            });
+                } else {
+                    Intent intent = new Intent(GameActivity.this, GameActivity.class);
+                    intent.putExtra("gameId", newGameId);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    finish();
+                }
             }
 
             Boolean disp = docSnapshot.getBoolean("winnerDisplayed");
