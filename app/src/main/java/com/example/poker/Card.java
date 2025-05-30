@@ -53,7 +53,7 @@ public class Card implements Comparable<Card> {
     // 1 -- пики
     // 2 -- червы
     // 3 -- бубы
-    // 4 -- крести(трефы). Но это все если храним как адекватные люди
+    // 4 -- крести. Но это все если храним как адекватные люди
     private int rank;
     // валет -- 11
     // дама -- 12
@@ -93,7 +93,7 @@ public class Card implements Comparable<Card> {
                 s = "♣";
                 break;  // крести
             default:
-                s = "?";
+                s = " ";
         }
         return r + s;
     }

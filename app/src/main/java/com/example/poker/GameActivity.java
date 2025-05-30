@@ -1,25 +1,25 @@
 package com.example.poker;
 
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-import android.widget.Toast;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 
-import android.view.View;
 import android.graphics.Color;
 import android.graphics.Typeface;
 
 import android.util.Log;
 import java.util.*;
+import android.content.*;
+import android.view.*;
+import android.widget.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import android.content.Intent;
 import com.google.firebase.firestore.FieldValue;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.Toolbar;
+import android.annotation.SuppressLint;
 
 public class GameActivity extends AppCompatActivity {
     private FirebaseFirestore db;
@@ -42,7 +42,6 @@ public class GameActivity extends AppCompatActivity {
 
     private ImageView[] commViews;
     private List<String> deck;
-    private int round = 0;
     private String creatorID;
     private String currentPlayerID;
     private String lastRaise = creatorID;
@@ -50,7 +49,6 @@ public class GameActivity extends AppCompatActivity {
     private TextView[] chipViews;
     private List<String> playersRaisedThisRound = new ArrayList<>();
     private List<String> joinAfterStart = new ArrayList<>();
-
     private String gameName;
 
     @Override
@@ -395,6 +393,83 @@ public class GameActivity extends AppCompatActivity {
             });
         });
     }
+    @SuppressLint("MissingSuperCall")
+    public void onBackPressed() {
+        showLeaveConfirmationDialog();
+    }
+    private void showLeaveConfirmationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Выход из игры")
+                .setMessage("Вы точно хотите выйти из игры?")
+                .setPositiveButton("Да", (dialog, which) -> leaveGame())
+                .setNegativeButton("Отмена", null)
+                .show();
+    }
+    private void leaveGame() {
+        String currentUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DocumentReference gameRef = FirebaseFirestore.getInstance().collection("games").document(gameId);
+
+        gameRef.get().addOnSuccessListener(snapshot -> {
+            if (snapshot.exists()) {
+                List<String> playerIds = new ArrayList<>((List<String>) snapshot.get("playerIds"));
+                String currentPlayerID = snapshot.getString("currentPlayerID");
+                String lastRaise = snapshot.getString("lastRaise");
+
+                if (playerIds != null && playerIds.contains(currentUID)) {
+                    if (currentUID.equals(currentPlayerID)) {
+                        proceedToNextPlayer(false);
+                    }
+                    playerIds.remove(currentUID);
+                    if (currentUID.equals(lastRaise)) {
+                        List<String> originalPlayerIds = (List<String>) snapshot.get("playerIds");
+                        int leavingIndex = originalPlayerIds.indexOf(currentUID);
+
+                        int prevIndex = leavingIndex - 1;
+                        if (prevIndex < 0 && playerIds.size() > 0) prevIndex = playerIds.size() - 1;
+
+                        if (playerIds.size() > 0) {
+                            lastRaise = playerIds.get(prevIndex);
+                        } else {
+                            lastRaise = null;
+                        }
+                        if (currentUID.equals(currentPlayerID))
+                            proceedToNextStage();
+                    }
+
+                    Long pot = snapshot.contains("pot") ? snapshot.getLong("pot") : 0L;
+                    Map<String, Long> playerBets = (Map<String, Long>) snapshot.get("playerBets");
+                    Long leavingBet = (playerBets != null && playerBets.containsKey(currentUID)) ? playerBets.get(currentUID) : 0L;
+
+                    if (leavingBet != null) {
+                        pot += leavingBet;
+                    }
+
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("pot", pot);
+                    updates.put("playerIds", playerIds);
+                    updates.put("holeCards." + currentUID, FieldValue.delete());
+                    updates.put("playerBets." + currentUID, FieldValue.delete());
+                    updates.put("lastRaise", lastRaise);
+
+                    if (playerIds.size() == 1) {
+                        String winnerUid = playerIds.get(0);
+                    }
+
+                    gameRef.update(updates)
+                            .addOnSuccessListener(aVoid -> {
+                                for (ImageView card : holeCardViews1) {
+                                    card.setImageDrawable(null);
+                                }
+                                for (ImageView card : holeCardViews2) {
+                                    card.setImageDrawable(null);
+                                }
+                                finish();
+                            });
+                }
+            }
+        });
+    }
+
 
     private void foldEndGame(String winnerID) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
