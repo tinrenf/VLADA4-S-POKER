@@ -548,7 +548,7 @@ public class GameActivity extends AppCompatActivity {
             pot = ((Long) docSnapshot.get("pot")).intValue();
             for (Object val : playerBets.values()) {
                 if (val instanceof Number) {
-                    pot += ((Number) val).intValue();
+                    pot += ((Number)val).intValue();
                 }
             }
             playerBets.clear();
