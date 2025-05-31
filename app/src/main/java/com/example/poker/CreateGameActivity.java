@@ -2,26 +2,29 @@ package com.example.poker;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.Toast;
+import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.widget.EditText;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.auth.FirebaseAuth;
 
-import android.util.Log;
 import java.util.*;
+import android.content.*;
+import android.view.*;
+import android.widget.*;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.auth.FirebaseUser;
+import android.text.InputFilter;
 
 public class CreateGameActivity extends AppCompatActivity {
 
     private EditText gameNameEditText;
     private EditText bigBlindEditText;
     private Button createButton;
+    private Button buttonIncrease;
+    private Button buttonDecrease;
+    private int bigBlind = 50;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,18 +34,31 @@ public class CreateGameActivity extends AppCompatActivity {
         gameNameEditText = findViewById(R.id.editTextGameName);
         bigBlindEditText = findViewById(R.id.editTextBigBlind);
         createButton = findViewById(R.id.buttonCreateGame);
+        buttonIncrease = findViewById(R.id.buttonIncrease);
+        buttonDecrease = findViewById(R.id.buttonDecrease);
+
+        gameNameEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20)});
+
+        bigBlindEditText.setText(String.valueOf(bigBlind));
+
+        buttonIncrease.setOnClickListener(v -> {
+            bigBlind += 50;
+            bigBlindEditText.setText(String.valueOf(bigBlind));
+        });
+
+        buttonDecrease.setOnClickListener(v -> {
+            if (bigBlind > 50) {
+                bigBlind -= 50;
+                bigBlindEditText.setText(String.valueOf(bigBlind));
+            }
+        });
 
         createButton.setOnClickListener(v -> {
             String gameName = gameNameEditText.getText().toString().trim();
-            String blindStr = bigBlindEditText.getText().toString().trim();
-
-            if (gameName.isEmpty() || blindStr.isEmpty()) {
-                Toast.makeText(this, "Введите название и большой блайнд", Toast.LENGTH_SHORT).show();
+            if (gameName.isEmpty()) {
+                Toast.makeText(this, "Введите название игры", Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            int bigBlind = Integer.parseInt(blindStr);
-
             createGameInFirestore(gameName, bigBlind);
         });
     }
@@ -69,15 +85,11 @@ public class CreateGameActivity extends AppCompatActivity {
                 .add(game)
                 .addOnSuccessListener(documentReference -> {
                     Toast.makeText(this, "Игра создана", Toast.LENGTH_SHORT).show();
-
                     Intent intent = new Intent(CreateGameActivity.this, GameActivity.class);
                     intent.putExtra("gameId", documentReference.getId());
                     startActivity(intent);
                     finish();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Ошибка при создании игры", Toast.LENGTH_SHORT).show();
-                    Log.e("CreateGameActivity", "Ошибка: ", e);
                 });
     }
 }
+
