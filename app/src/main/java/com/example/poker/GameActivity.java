@@ -18,7 +18,6 @@ import android.widget.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import com.google.firebase.firestore.FieldValue;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
 import android.annotation.SuppressLint;
 
 public class GameActivity extends AppCompatActivity {
@@ -272,8 +271,6 @@ public class GameActivity extends AppCompatActivity {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference gameRef = db.collection("games").document(gameId);
 
-            int raiseAmount = cur_rate + big_blind;
-
             gameRef.get().addOnSuccessListener(docSnapshot -> {
                 if (docSnapshot.exists()) {
                     Map<String, Long> chipsMap = (Map<String, Long>) docSnapshot.get("chips");
@@ -286,26 +283,63 @@ public class GameActivity extends AppCompatActivity {
                         }
                     }
                     int prevBet = playerBets.getOrDefault(currentUID, 0);
+                    int minRaise = cur_rate + big_blind;
+                    int maxRaise = prevBet + (int)currentChips;
 
-                    if (currentChips - (raiseAmount - prevBet) >= 0) {
-                        chipsMap.put(currentPlayerID, currentChips - (raiseAmount - prevBet));
-                        playerBets = (Map<String, Integer>) docSnapshot.get("playerBets");
-                        playerBets.put(currentUID, raiseAmount);
-                        cur_rate = raiseAmount;
+                    //ползункок
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Choose raise amount");
 
-                        Map<String, Object> updates = new HashMap<>();
-                        updates.put("chips", chipsMap);
-                        updates.put("playerBets", playerBets);
-                        updates.put("currentBet", cur_rate);
-                        updates.put("lastRaise", currentUID);
-                        updates.put("playersRaisedThisRound", playersRaisedThisRound);
-                        gameRef.update(updates);
+                    LinearLayout layout = new LinearLayout(this);
+                    layout.setOrientation(LinearLayout.VERTICAL);
+                    layout.setPadding(50, 40, 50, 10);
 
-                        updatePotView();
-                        proceedToNextPlayer(false);
-                    } else {
-                        Toast.makeText(this, "Not enough chips to raise", Toast.LENGTH_SHORT).show();
-                    }
+                    SeekBar seekBar = new SeekBar(this);
+                    seekBar.setMax(maxRaise - minRaise);
+                    seekBar.setProgress(0);
+
+                    TextView valueText = new TextView(this);
+                    valueText.setText("Raise: " + minRaise);
+                    valueText.setPadding(0, 20, 0, 20);
+
+                    seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            valueText.setText("Raise: " + (minRaise + progress));
+                        }
+
+                        @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                        @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+                    });
+
+                    layout.addView(valueText);
+                    layout.addView(seekBar);
+                    builder.setView(layout);
+
+                    builder.setPositiveButton("Raise", (dialog, which) -> {
+                        int raiseAmount = minRaise + seekBar.getProgress();
+
+                        if (currentChips - (raiseAmount - prevBet) >= 0) {
+                            chipsMap.put(currentPlayerID, currentChips - (raiseAmount - prevBet));
+                            playerBets.put(currentUID, raiseAmount);
+
+                            Map<String, Object> updates = new HashMap<>();
+                            updates.put("chips", chipsMap);
+                            updates.put("playerBets", playerBets);
+                            updates.put("currentBet", raiseAmount);
+                            updates.put("lastRaise", currentUID);
+                            updates.put("playersRaisedThisRound", playersRaisedThisRound);
+                            gameRef.update(updates);
+
+                            updatePotView();
+                            proceedToNextPlayer(false);
+                        } else {
+                            Toast.makeText(this, "Not enough chips to raise", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                    builder.setNegativeButton("Cancel", null);
+                    builder.show();
                 }
             });
         });
