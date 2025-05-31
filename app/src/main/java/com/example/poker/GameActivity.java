@@ -758,7 +758,18 @@ public class GameActivity extends AppCompatActivity {
             }
 
             if (docSnapshot.contains("currentBet")) {
-                cur_rate = ((Long) docSnapshot.get("currentBet")).intValue();
+                Long currentBet = docSnapshot.getLong("currentBet");
+                cur_rate = currentBet.intValue();
+                Button raiseButton = findViewById(R.id.button_raise);
+                Button callButton = findViewById(R.id.button_call);
+
+                if (currentBet != null && currentBet > 0) {
+                    raiseButton.setText("Raise");
+                    callButton.setText("Call");
+                } else {
+                    raiseButton.setText("Bet");
+                    callButton.setText("Check");
+                }
             }
 
             if (docSnapshot.contains("foldedPlayers")) {
