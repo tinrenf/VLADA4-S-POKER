@@ -17,14 +17,20 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <ImageView
-            android:id="@+id/playerAvatar"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="88dp"
-            android:layout_height="101dp"
+            android:layout_height="104dp"
             android:padding="11dp"
-            android:src="@drawable/avatar_default"
             android:background="@drawable/avatar_background"
-            android:scaleType="centerCrop" />
+            android:scaleType="centerCrop">
+
+            <ImageView
+                android:id="@+id/playerAvatar"
+                android:src="@drawable/avatar_default"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
             android:orientation="vertical"
@@ -32,7 +38,7 @@
             android:layout_height="wrap_content"
             android:padding="11dp">
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/playerName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -40,7 +46,7 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/playerChips"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -61,22 +67,24 @@
         android:gravity="center"
         tools:context=".MainActivity">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/play_button"
             android:layout_width="180dp"
             android:layout_height="80dp"
             android:text="Play"
             android:textSize="30sp"
-            android:backgroundTint="@color/green"
+            android:textColor="@color/onPrimary"
+            app:backgroundTint="@color/primary"
             />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/logout_button"
             android:layout_width="180dp"
             android:layout_height="80dp"
             android:text="Logout"
             android:textSize="30sp"
-            android:backgroundTint="@color/green"
+            android:textColor="@color/onPrimary"
+            app:backgroundTint="@color/primary"
             />
 
     </LinearLayout>

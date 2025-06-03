@@ -4,14 +4,14 @@
     android:layout_height="match_parent"
     android:padding="24dp">
 
-    <EditText
+    <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/editTextGameName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Название игры"
         android:maxLength="20" />
 
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Большой блайнд"
@@ -24,13 +24,13 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonDecrease"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="−" />
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editTextBigBlind"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -40,14 +40,14 @@
             android:gravity="center"
             android:text="50" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonIncrease"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="+" />
     </LinearLayout>
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonCreateGame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

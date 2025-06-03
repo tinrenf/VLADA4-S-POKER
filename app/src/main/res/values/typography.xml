@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Headline" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="fontFamily">@font/playfair_display</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
+</resources>

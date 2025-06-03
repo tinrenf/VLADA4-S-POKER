@@ -2,7 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/green"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/background"
     android:padding="16dp">
 
     <LinearLayout
@@ -35,7 +36,7 @@
             style="@style/CommCard" />
     </LinearLayout>
 
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/pot_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -56,21 +57,21 @@
         android:orientation="horizontal"
         android:gravity="center">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/button_fold"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Fold" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/button_call"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Call" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/button_raise"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -79,7 +80,7 @@
     </LinearLayout>
 
     <!-- Кнопка старт над количеством фишек -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/start_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -87,7 +88,7 @@
         android:layout_centerHorizontal="true"
         android:text="Start" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/next_round"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -107,7 +108,7 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -116,7 +117,7 @@
             android:textColor="@android:color/white"
             android:textSize="18sp" />
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/bet_player5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -146,7 +147,7 @@
                 android:layout_height="match_parent" />
         </LinearLayout>
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player5_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -166,7 +167,7 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player2_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -175,7 +176,7 @@
             android:textColor="@android:color/white"
             android:textSize="18sp" />
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/bet_player2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -203,10 +204,11 @@
                 android:id="@+id/card2_player2"
                 android:layout_width="32dp"
                 android:layout_height="match_parent" />
+
         </LinearLayout>
 
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player2_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -226,7 +228,7 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player3_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -235,7 +237,7 @@
             android:textColor="@android:color/white"
             android:textSize="18sp" />
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/bet_player3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -263,9 +265,10 @@
                 android:id="@+id/card2_player3"
                 android:layout_width="32dp"
                 android:layout_height="match_parent" />
+
         </LinearLayout>
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player3_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -285,7 +288,7 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player1_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -294,7 +297,7 @@
             android:textColor="@android:color/white"
             android:textSize="18sp" />
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/bet_player1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -322,10 +325,11 @@
                 android:id="@+id/card2_player1"
                 android:layout_width="32dp"
                 android:layout_height="match_parent" />
+
         </LinearLayout>
 
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player1_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -345,7 +349,7 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player4_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -354,7 +358,7 @@
             android:textColor="@android:color/white"
             android:textSize="18sp" />
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/bet_player4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -382,9 +386,10 @@
                 android:id="@+id/card2_player4"
                 android:layout_width="32dp"
                 android:layout_height="match_parent" />
+
         </LinearLayout>
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/player4_chips"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -38,5 +38,4 @@
             android:name=".CreateGameActivity">
         </activity>
     </application>
-
 </manifest>

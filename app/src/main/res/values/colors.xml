@@ -3,4 +3,21 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="green">#4CAF50</color>
+
+    <color name="primary">#2E3A4D</color>
+    <color name="onPrimary">#FFFFFF</color>
+    <color name="primaryContainer">#A5D6A7</color>
+    <color name="onPrimaryContainer">#1B5E20</color>
+
+    <color name="secondary">#D4AF37</color>
+    <color name="onSecondary">#000000</color>
+    <color name="secondaryContainer">#FFECB3</color>
+    <color name="onSecondaryContainer">#5D4037</color>
+
+    <color name="error">#B00020</color>
+    <color name="onError">#FFFFFF</color>
+
+    <color name="background">#2E7D32</color>
+    <color name="surface">#FFECB3</color>
+    <color name="onSurface">#1C1B1F</color>
 </resources>
