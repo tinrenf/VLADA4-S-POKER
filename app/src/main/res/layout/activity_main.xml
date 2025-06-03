@@ -73,8 +73,7 @@
             android:layout_height="80dp"
             android:text="Play"
             android:textSize="30sp"
-            android:textColor="@color/onPrimary"
-            app:backgroundTint="@color/primary"
+
             />
 
         <com.google.android.material.button.MaterialButton
@@ -83,8 +82,7 @@
             android:layout_height="80dp"
             android:text="Logout"
             android:textSize="30sp"
-            android:textColor="@color/onPrimary"
-            app:backgroundTint="@color/primary"
+
             />
 
     </LinearLayout>

@@ -10,7 +10,7 @@
     <color name="onPrimaryContainer">#1B5E20</color>
 
     <color name="secondary">#D4AF37</color>
-    <color name="onSecondary">#000000</color>
+    <color name="onSecondary">#444444</color>
     <color name="secondaryContainer">#FFECB3</color>
     <color name="onSecondaryContainer">#5D4037</color>
 
@@ -18,6 +18,7 @@
     <color name="onError">#FFFFFF</color>
 
     <color name="background">#2E7D32</color>
+    <color name="colorOnBackground">#000000</color>
     <color name="surface">#FFECB3</color>
-    <color name="onSurface">#1C1B1F</color>
+    <color name="onSurface">#000000</color>
 </resources>
