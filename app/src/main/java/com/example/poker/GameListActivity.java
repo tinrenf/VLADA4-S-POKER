@@ -2,7 +2,6 @@ package com.example.poker;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -11,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -31,7 +29,6 @@ public class GameListActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
     private CollectionReference gamesRef;
-    private FirebaseAuth auth;
 
     private RecyclerView recyclerView;
     private GameAdapter adapter;
@@ -46,18 +43,7 @@ public class GameListActivity extends AppCompatActivity {
 
         //Firebase штучки
         db = FirebaseFirestore.getInstance();
-        auth = FirebaseAuth.getInstance();
         gamesRef = db.collection("games");
-
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-
-        if (currentUser != null) {
-            String uid = currentUser.getUid();
-            String email = currentUser.getEmail();
-            Log.d("FIREBASE_USER", "Пользователь вошёл: UID = " + uid + ", Email = " + email);
-        } else {
-            Log.d("FIREBASE_USER", "Пользователь НЕ вошёл в систему");
-        }
 
         // UI элементы
         recyclerView = findViewById(R.id.game_list_recycler_view);
@@ -84,30 +70,16 @@ public class GameListActivity extends AppCompatActivity {
     private void listenForGames() {
         gamesRef.orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
-            public void onEvent(@Nullable QuerySnapshot snapshots, @Nullable FirebaseFirestoreException e) {
-                if (e != null) {
-                    Log.w(TAG, "Listen failed.", e);
-                    Toast.makeText(GameListActivity.this,
-                            "Error loading games: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                Log.d(TAG, "onEvent: " + snapshots.size() + " games found.");
-
+            public void onEvent(QuerySnapshot s, FirebaseFirestoreException e) {
                 gameList.clear();
 
-                for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                for (DocumentSnapshot doc : s.getDocuments()) {
                     Game game = doc.toObject(Game.class);
                     if (game != null && doc.contains("timestamp")) {
                         game.setId(doc.getId());
                         gameList.add(game);
-                        Log.d(TAG, "Game added: " + game.getId());
-                    } else {
-                        Log.w(TAG, "Game without timestamp: " + doc.getId());
                     }
                 }
-
                 adapter.notifyDataSetChanged();
             }
         });
@@ -135,7 +107,7 @@ public class GameListActivity extends AppCompatActivity {
                 .addOnSuccessListener(documentReference -> {
                     Toast.makeText(this, "Game created", Toast.LENGTH_SHORT).show();
 
-                    Intent intent = new Intent(GameListActivity.this, GameActivity.class);//в GameActivity
+                    Intent intent = new Intent(GameListActivity.this, GameActivity.class);
                     intent.putExtra("gameId", documentReference.getId());
                     startActivity(intent);
                 })

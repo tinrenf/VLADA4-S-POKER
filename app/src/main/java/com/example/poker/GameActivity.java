@@ -1,5 +1,10 @@
 package com.example.poker;
 
+import java.util.*;
+import android.content.*;
+import android.view.*;
+import android.widget.*;
+
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -9,12 +14,6 @@ import com.google.firebase.firestore.DocumentReference;
 
 import android.graphics.Color;
 import android.graphics.Typeface;
-
-import android.util.Log;
-import java.util.*;
-import android.content.*;
-import android.view.*;
-import android.widget.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import com.google.firebase.firestore.FieldValue;
 import androidx.appcompat.app.AlertDialog;
@@ -53,8 +52,6 @@ public class GameActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Toast.makeText(this, "GameActivity onCreate", Toast.LENGTH_SHORT).show();
-        Log.d("DEBUG", "GameActivity onCreate, gameId=" + getIntent().getStringExtra("gameId"));
         setContentView(R.layout.activity_game);
 
         gameId = getIntent().getStringExtra("gameId");
@@ -110,33 +107,32 @@ public class GameActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        db.collection("games").document(gameId).get().addOnSuccessListener(documentSnapshot -> {
-            if (documentSnapshot.exists()) {
-                List<String> ids = (List<String>) documentSnapshot.get("playerIds");
+        db.collection("games").document(gameId).get().addOnSuccessListener(doc -> {
+            if (doc.exists()) {
+                List<String> ids = (List<String>) doc.get("playerIds");
                 if (ids != null) {
                     playerIds = new ArrayList<>(ids);
                 }
-                Long bigBlindLong = documentSnapshot.getLong("bigBlind");
-                if (bigBlindLong != null) {
-                    big_blind = bigBlindLong.intValue();
+                Long curBigBlind = doc.getLong("bigBlind");
+                if (curBigBlind != null) {
+                    big_blind = curBigBlind.intValue();
                     small_blind = big_blind / 2;
                 }
-                gameName = documentSnapshot.getString("name");
+                gameName = doc.getString("name");
             }
         });
 
         startButton = findViewById(R.id.start_button);
         Button callButton = findViewById(R.id.button_call);
         Button raiseButton = findViewById(R.id.button_raise);
-        Button foldButton = findViewById(R.id.button_fold);/**КНОПКИ**/
+        Button foldButton = findViewById(R.id.button_fold);
 
         loadGameDetails(gameId);
 
         startButton.setOnClickListener(v -> {
             db.collection("games").document(gameId).get()
-                    .addOnSuccessListener(snapshot -> {
-                        if (snapshot.contains("gameStarted") && Boolean.TRUE.equals(snapshot.get("gameStarted"))) {
-                            Log.d("Game", "Игра уже началась");
+                    .addOnSuccessListener(doc -> {
+                        if (doc.contains("gameStarted") && Boolean.TRUE.equals(doc.get("gameStarted"))) {
                             return;
                         }
 
@@ -152,6 +148,7 @@ public class GameActivity extends AppCompatActivity {
 
                         cur_rate = big_blind;
 
+                        //основные штуки
                         gameRef.get().addOnSuccessListener(docSnapshot -> {
                             if (docSnapshot.exists()) {
                                 List<String> playerIds = (List<String>) docSnapshot.get("playerIds");
@@ -185,14 +182,13 @@ public class GameActivity extends AppCompatActivity {
 
                         Map<String, List<Card>> holeCards = PreFlop.deal(playerIds);
 
-                        // Показываем карты у игроков
+                        // Карты у игроков на руках
                         for (int i = 0; i < playerIds.size() && i < holeCardViews1.length; i++) {
                             List<Card> hand = holeCards.get(playerIds.get(i));
                             holeCardViews1[i].setImageResource(getResources().getIdentifier(Card.toImage(hand.get(0).toString()), "drawable", getPackageName()));
                             holeCardViews2[i].setImageResource(getResources().getIdentifier(Card.toImage(hand.get(1).toString()), "drawable", getPackageName()));
                         }
 
-                        // Сохраняем карты в Firestore
                         Map<String, Object> holeCardStrings = new HashMap<>();
                         for (Map.Entry<String, List<Card>> entry : holeCards.entrySet()) {
                             String uid = entry.getKey();
@@ -216,16 +212,13 @@ public class GameActivity extends AppCompatActivity {
                             deck.remove(hand.get(1).toString());
                         }
 
-
                         Map<String, Object> chips = new HashMap<>();
-
                         AtomicInteger remaining = new AtomicInteger(playerIds.size());
-
                         for (String uid : playerIds) {
                             db.collection("players").document(uid).get()
-                                    .addOnSuccessListener(docSnapshot -> {
-                                        if (docSnapshot.exists()) {
-                                            Long money = docSnapshot.getLong("money");
+                                    .addOnSuccessListener(doc1 -> {
+                                        if (doc1.exists()) {
+                                            Long money = doc1.getLong("money");
                                             if (money != null) {
                                                 chips.put(uid, money);
                                             } else {
@@ -236,16 +229,14 @@ public class GameActivity extends AppCompatActivity {
                                         }
 
                                         if (remaining.decrementAndGet() == 0) {
-                                            Object smallBlindValue = chips.get(smallBlindPlayer);
-                                            Object bigBlindValue = chips.get(bigBlindPlayer);
-                                            if (smallBlindValue instanceof Number && bigBlindValue instanceof Number) {
-                                                int newSmall = ((Number) smallBlindValue).intValue() - small_blind;
-                                                int newBig = ((Number) bigBlindValue).intValue() - big_blind;
-
+                                            Object smallBlind = chips.get(smallBlindPlayer);
+                                            Object bigBlind = chips.get(bigBlindPlayer);
+                                            if (smallBlind instanceof Number && bigBlind instanceof Number) {
+                                                int newSmall = ((Number) smallBlind).intValue() - small_blind;
+                                                int newBig = ((Number) bigBlind).intValue() - big_blind;
                                                 chips.put(smallBlindPlayer, newSmall);
                                                 chips.put(bigBlindPlayer, newBig);
                                             }
-
                                             db.collection("games").document(gameId).update("chips", chips);
                                         }
                                     });
@@ -271,11 +262,11 @@ public class GameActivity extends AppCompatActivity {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference gameRef = db.collection("games").document(gameId);
 
-            gameRef.get().addOnSuccessListener(docSnapshot -> {
-                if (docSnapshot.exists()) {
-                    Map<String, Long> chipsMap = (Map<String, Long>) docSnapshot.get("chips");
-                    long currentChips = chipsMap.get(currentPlayerID);
-                    Map<String, Object> rawMap = (Map<String, Object>) docSnapshot.get("playerBets");
+            gameRef.get().addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    Map<String, Long> chipsMap = (Map<String, Long>) doc.get("chips");
+                    long curChips = chipsMap.get(currentPlayerID);
+                    Map<String, Object> rawMap = (Map<String, Object>) doc.get("playerBets");
                     Map<String, Integer> playerBets = new HashMap<>();
                     if (rawMap != null) {
                         for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
@@ -284,9 +275,8 @@ public class GameActivity extends AppCompatActivity {
                     }
                     int prevBet = playerBets.getOrDefault(currentUID, 0);
                     int minRaise = cur_rate + big_blind;
-                    int maxRaise = prevBet + (int)currentChips;
+                    int maxRaise = prevBet + (int)curChips;
 
-                    //ползункок
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle("Choose raise amount");
 
@@ -307,7 +297,6 @@ public class GameActivity extends AppCompatActivity {
                         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                             valueText.setText("Raise: " + (minRaise + progress));
                         }
-
                         @Override public void onStartTrackingTouch(SeekBar seekBar) {}
                         @Override public void onStopTrackingTouch(SeekBar seekBar) {}
                     });
@@ -319,8 +308,8 @@ public class GameActivity extends AppCompatActivity {
                     builder.setPositiveButton("Raise", (dialog, which) -> {
                         int raiseAmount = minRaise + seekBar.getProgress();
 
-                        if (currentChips - (raiseAmount - prevBet) >= 0) {
-                            chipsMap.put(currentPlayerID, currentChips - (raiseAmount - prevBet));
+                        if (curChips - (raiseAmount - prevBet) >= 0) {
+                            chipsMap.put(currentPlayerID, curChips - (raiseAmount - prevBet));
                             playerBets.put(currentUID, raiseAmount);
 
                             Map<String, Object> updates = new HashMap<>();
@@ -337,7 +326,6 @@ public class GameActivity extends AppCompatActivity {
                             Toast.makeText(this, "Not enough chips to raise", Toast.LENGTH_SHORT).show();
                         }
                     });
-
                     builder.setNegativeButton("Cancel", null);
                     builder.show();
                 }
@@ -351,9 +339,9 @@ public class GameActivity extends AppCompatActivity {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference gameRef = db.collection("games").document(gameId);
 
-            gameRef.get().addOnSuccessListener(docSnapshot -> {
-                if (docSnapshot.exists()) {
-                    Map<String, Object> rawMap = (Map<String, Object>) docSnapshot.get("playerBets");
+            gameRef.get().addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    Map<String, Object> rawMap = (Map<String, Object>) doc.get("playerBets");
                     Map<String, Integer> playerBets = new HashMap<>();
                     if (rawMap != null) {
                         for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
@@ -368,7 +356,7 @@ public class GameActivity extends AppCompatActivity {
                         return;
                     }
 
-                    Map<String, Long> chipsMap = (Map<String, Long>) docSnapshot.get("chips");
+                    Map<String, Long> chipsMap = (Map<String, Long>) doc.get("chips");
                     long currentChips = chipsMap.get(currentPlayerID);
 
                     if (currentChips - toCall >= 0) {
@@ -395,9 +383,9 @@ public class GameActivity extends AppCompatActivity {
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference gameRef = db.collection("games").document(gameId);
 
-            gameRef.get().addOnSuccessListener(docSnapshot -> {
-                if (docSnapshot.exists()) {
-                    List<String> foldedList = (List<String>) docSnapshot.get("foldedPlayers");
+            gameRef.get().addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    List<String> foldedList = (List<String>) doc.get("foldedPlayers");
                     if (foldedList == null) foldedList = new ArrayList<>();
 
                     boolean fuckFold = false;
@@ -433,21 +421,21 @@ public class GameActivity extends AppCompatActivity {
     }
     private void showLeaveConfirmationDialog() {
         new AlertDialog.Builder(this)
-                .setTitle("Выход из игры")
-                .setMessage("Вы точно хотите выйти из игры?")
-                .setPositiveButton("Да", (dialog, which) -> leaveGame())
-                .setNegativeButton("Отмена", null)
+                .setTitle("Leave Game")
+                .setMessage("Are you sure you want to leave the game?")
+                .setPositiveButton("Leave", (dialog, which) -> leaveGame())
+                .setNegativeButton("Cancel", null)
                 .show();
     }
     private void leaveGame() {
         String currentUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DocumentReference gameRef = FirebaseFirestore.getInstance().collection("games").document(gameId);
 
-        gameRef.get().addOnSuccessListener(snapshot -> {
-            if (snapshot.exists()) {
-                List<String> playerIds = new ArrayList<>((List<String>) snapshot.get("playerIds"));
-                String currentPlayerID = snapshot.getString("currentPlayerID");
-                String lastRaise = snapshot.getString("lastRaise");
+        gameRef.get().addOnSuccessListener(doc -> {
+            if (doc.exists()) {
+                List<String> playerIds = new ArrayList<>((List<String>) doc.get("playerIds"));
+                String currentPlayerID = doc.getString("currentPlayerID");
+                String lastRaise = doc.getString("lastRaise");
 
                 if (playerIds != null && playerIds.contains(currentUID)) {
                     if (currentUID.equals(currentPlayerID)) {
@@ -455,7 +443,7 @@ public class GameActivity extends AppCompatActivity {
                     }
                     playerIds.remove(currentUID);
                     if (currentUID.equals(lastRaise)) {
-                        List<String> originalPlayerIds = (List<String>) snapshot.get("playerIds");
+                        List<String> originalPlayerIds = (List<String>) doc.get("playerIds");
                         int leavingIndex = originalPlayerIds.indexOf(currentUID);
 
                         int prevIndex = leavingIndex - 1;
@@ -470,8 +458,8 @@ public class GameActivity extends AppCompatActivity {
                             proceedToNextStage();
                     }
 
-                    Long pot = snapshot.contains("pot") ? snapshot.getLong("pot") : 0L;
-                    Map<String, Long> playerBets = (Map<String, Long>) snapshot.get("playerBets");
+                    Long pot = doc.contains("pot") ? doc.getLong("pot") : 0L;
+                    Map<String, Long> playerBets = (Map<String, Long>) doc.get("playerBets");
                     Long leavingBet = (playerBets != null && playerBets.containsKey(currentUID)) ? playerBets.get(currentUID) : 0L;
 
                     if (leavingBet != null) {
@@ -487,7 +475,7 @@ public class GameActivity extends AppCompatActivity {
 
                     if (playerIds.size() == 1) {
                         String winnerUid = playerIds.get(0);
-                    }
+                    }//случай победы когда все вышли
 
                     gameRef.update(updates)
                             .addOnSuccessListener(aVoid -> {
@@ -504,23 +492,22 @@ public class GameActivity extends AppCompatActivity {
         });
     }
 
-
     private void foldEndGame(String winnerID) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference gameRef = db.collection("games").document(gameId);
 
-        gameRef.get().addOnSuccessListener(docSnapshot -> {
-            if (!docSnapshot.exists()) return;
+        gameRef.get().addOnSuccessListener(doc -> {
+            if (!doc.exists()) return;
 
             Map<String, Object> gameUpdates = new HashMap<>();
 
-            Long pot = docSnapshot.getLong("pot");
+            Long pot = doc.getLong("pot");
             if (pot == null) pot = 0L;
 
-            Map<String, Long> chips = (Map<String, Long>) docSnapshot.get("chips");
+            Map<String, Long> chips = (Map<String, Long>) doc.get("chips");
             if (chips == null) chips = new HashMap<>();
 
-            Map<String, Object> pb = (Map<String, Object>) docSnapshot.get("playerBets");
+            Map<String, Object> pb = (Map<String, Object>) doc.get("playerBets");
             if (pb == null) pb = new HashMap<>();
 
             Long newWinnerMoney = pot;
@@ -549,17 +536,17 @@ public class GameActivity extends AppCompatActivity {
             gameRef.update(gameUpdates);
 
             DocumentReference oldGameRef = db.collection("games").document(gameId);
-            oldGameRef.get().addOnSuccessListener(doc -> {
-                if (!doc.exists()) return;
+            oldGameRef.get().addOnSuccessListener(doc1 -> {
+                if (!doc1.exists()) return;
 
-                List<String> players = (List<String>) doc.get("playerIds");
+                List<String> players = (List<String>) doc1.get("playerIds");
                 Map<String, Object> newGame = new HashMap<>();
                 newGame.put("creatorID", creatorID);
                 newGame.put("playerIds", players);
                 newGame.put("maxPlayers", 5);
                 newGame.put("status", "waiting");
                 newGame.put("timestamp", FieldValue.serverTimestamp());
-                newGame.put("chips", doc.get("chips"));
+                newGame.put("chips", doc1.get("chips"));
                 newGame.put("bigBlind", big_blind);
                 newGame.put("name", gameName);
 
@@ -577,9 +564,9 @@ public class GameActivity extends AppCompatActivity {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference gameRef = db.collection("games").document(gameId);
 
-        gameRef.get().addOnSuccessListener(docSnapshot -> {
-            if (!docSnapshot.exists()) return;
-            List<String> communityCards = (List<String>) docSnapshot.get("communityCards");
+        gameRef.get().addOnSuccessListener(doc -> {
+            if (!doc.exists()) return;
+            List<String> communityCards = (List<String>) doc.get("communityCards");
             if (communityCards == null) return;
 
             for (int i = 0; i < commViews.length; i++) {
@@ -599,11 +586,11 @@ public class GameActivity extends AppCompatActivity {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference gameRef = db.collection("games").document(gameId);
 
-        gameRef.get().addOnSuccessListener(docSnapshot -> {
-            if (!docSnapshot.exists()) return;
+        gameRef.get().addOnSuccessListener(doc -> {
+            if (!doc.exists()) return;
 
-            String stage = docSnapshot.getString("stage");
-            List<String> deck = (List<String>) docSnapshot.get("deck");
+            String stage = doc.getString("stage");
+            List<String> deck = (List<String>) doc.get("deck");
 
             if (deck == null || deck.size() < 5) {
                 gameRef.update("stage", "VVV");
@@ -637,12 +624,12 @@ public class GameActivity extends AppCompatActivity {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference gameRef = db.collection("games").document(gameId);
 
-        gameRef.get().addOnSuccessListener(docSnapshot -> {
-            if (!docSnapshot.exists()) return;
+        gameRef.get().addOnSuccessListener(doc -> {
+            if (!doc.exists()) return;
 
             Map<String, Object> updates = new HashMap<>();
 
-            Map<String, Object> rawPlayerBets = (Map<String, Object>) docSnapshot.get("playerBets");
+            Map<String, Object> rawPlayerBets = (Map<String, Object>) doc.get("playerBets");
             Map<String, Integer> playerBets = new HashMap<>();
 
             if (rawPlayerBets != null) {
@@ -654,7 +641,7 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
             cur_rate = 0;
-            pot = ((Long) docSnapshot.get("pot")).intValue();
+            pot = ((Long) doc.get("pot")).intValue();
             for (Object val : playerBets.values()) {
                 if (val instanceof Number) {
                     pot += ((Number)val).intValue();
@@ -672,21 +659,21 @@ public class GameActivity extends AppCompatActivity {
     private void proceedToNextPlayer(boolean fuckFold) {
         DocumentReference gameRef = db.collection("games").document(gameId);
 
-        gameRef.get().addOnSuccessListener(docSnapshot -> {
-            if (!docSnapshot.exists()) return;
+        gameRef.get().addOnSuccessListener(doc -> {
+            if (!doc.exists()) return;
 
-            List<String> originalPlayerIds = (List<String>) docSnapshot.get("playerIds");
+            List<String> originalPlayerIds = (List<String>) doc.get("playerIds");
             if (originalPlayerIds == null || originalPlayerIds.isEmpty()) return;
 
-            String currentPlayerID = docSnapshot.getString("currentPlayerID");
-            String lastRaiseUid = docSnapshot.getString("lastRaise");
+            String currentPlayerID = doc.getString("currentPlayerID");
+            String lastRaiseUid = doc.getString("lastRaise");
 
             if (currentPlayerID == null) return;
 
             int currentIndex = originalPlayerIds.indexOf(currentPlayerID);
             int nextIndex = (currentIndex + 1) % originalPlayerIds.size();
 
-            List<String> foldedPlayers = (List<String>) docSnapshot.get("foldedPlayers");
+            List<String> foldedPlayers = (List<String>) doc.get("foldedPlayers");
             if (foldedPlayers == null) foldedPlayers = new ArrayList<>();
 
             //след не скинувший карты. Менять, если меняем порядок игроков
@@ -722,19 +709,19 @@ public class GameActivity extends AppCompatActivity {
     private void loadGameDetails(String gameId) {
         DocumentReference gameRef = db.collection("games").document(gameId);
 
-        gameRef.addSnapshotListener((docSnapshot, e) -> {
-            if (e != null || docSnapshot == null || !docSnapshot.exists()) {
+        gameRef.addSnapshotListener((doc, e) -> {
+            if (e != null || doc == null || !doc.exists()) {
                 return;
             }
 
-            Game game = docSnapshot.toObject(Game.class);
-            creatorID = docSnapshot.getString("creatorID");
+            Game game = doc.toObject(Game.class);
+            creatorID = doc.getString("creatorID");
             String currentUID = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            String currentTurnUid = docSnapshot.getString("currentPlayerID");
+            String currentTurnUid = doc.getString("currentPlayerID");
 
             currentPlayerID = currentTurnUid;
 
-            Boolean gameStarted = docSnapshot.getBoolean("gameStarted");
+            Boolean gameStarted = doc.getBoolean("gameStarted");
             if (gameStarted != null && gameStarted) {
                 startButton.setVisibility(View.GONE);
             }
@@ -760,8 +747,8 @@ public class GameActivity extends AppCompatActivity {
                 playerIds.clear();
             }
 
-            if (docSnapshot.contains("holeCards")) {
-                Map<String, List<String>> holeCardMap = (Map<String, List<String>>) docSnapshot.get("holeCards");
+            if (doc.contains("holeCards")) {
+                Map<String, List<String>> holeCardMap = (Map<String, List<String>>) doc.get("holeCards");
 
                 for (int i = 0; i < playerIds.size() && i < holeCardViews1.length; i++) {
                     String uid = playerIds.get(i);
@@ -779,20 +766,20 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
 
-            String stage = docSnapshot.getString("stage");
+            String stage = doc.getString("stage");
             if (stage != null) {
                 updateStage(stage);
             }
 
-            Object d = docSnapshot.get("deck");
+            Object d = doc.get("deck");
             if (d instanceof List) {
                 deck = (List<String>) d;
             } else {
                 deck = new ArrayList<>();
             }
 
-            if (docSnapshot.contains("currentBet")) {
-                Long currentBet = docSnapshot.getLong("currentBet");
+            if (doc.contains("currentBet")) {
+                Long currentBet = doc.getLong("currentBet");
                 cur_rate = currentBet.intValue();
                 Button raiseButton = findViewById(R.id.button_raise);
                 Button callButton = findViewById(R.id.button_call);
@@ -806,21 +793,21 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
 
-            if (docSnapshot.contains("foldedPlayers")) {
-                List<String> list = (List<String>) docSnapshot.get("foldedPlayers");
+            if (doc.contains("foldedPlayers")) {
+                List<String> list = (List<String>) doc.get("foldedPlayers");
                 if (list != null) {
                     foldedPlayers.clear();
                     foldedPlayers.addAll(list);
                 }
             }
 
-            if (docSnapshot.contains("pot")) {
-                pot = ((Long) docSnapshot.get("pot")).intValue();
+            if (doc.contains("pot")) {
+                pot = ((Long) doc.get("pot")).intValue();
                 updatePotView();
             }
 
-            if (docSnapshot.contains("playerBets")) {
-                Map<String, Object> firestoreBets = (Map<String, Object>) docSnapshot.get("playerBets");
+            if (doc.contains("playerBets")) {
+                Map<String, Object> firestoreBets = (Map<String, Object>) doc.get("playerBets");
 
                 for (int i = 0; i < playerIds.size() && i < betViews.length; i++) {
                     String uid = playerIds.get(i);
@@ -833,15 +820,15 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
 
-            if (docSnapshot.contains("lastRaise")) {
-                String lastRaiseTM = docSnapshot.getString("lastRaise");
+            if (doc.contains("lastRaise")) {
+                String lastRaiseTM = doc.getString("lastRaise");
                 if (lastRaiseTM != null) {
                     lastRaise = lastRaiseTM;
                 }
             }
 
-            if (docSnapshot.contains("chips")) {
-                Map<String, Long> chipMap = (Map<String, Long>) docSnapshot.get("chips");
+            if (doc.contains("chips")) {
+                Map<String, Long> chipMap = (Map<String, Long>) doc.get("chips");
 
                 for (int i = 0; i < playerIds.size() && i < chipViews.length; i++) {
                     String uid = playerIds.get(i);
@@ -850,23 +837,23 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
 
-            if (docSnapshot.contains("joinAfterStart")) {
-                List<String> list = (List<String>) docSnapshot.get("foldedPlayers");
+            if (doc.contains("joinAfterStart")) {
+                List<String> list = (List<String>) doc.get("foldedPlayers");
                 if (list != null) {
                     joinAfterStart.clear();
                     joinAfterStart.addAll(list);
                 }
             }
 
-            if (docSnapshot.contains("playersRaisedThisRound")) {
-                List<String> raisedList = (List<String>) docSnapshot.get("playersRaisedThisRound");
+            if (doc.contains("playersRaisedThisRound")) {
+                List<String> raisedList = (List<String>) doc.get("playersRaisedThisRound");
                 if (raisedList != null) {
                     playersRaisedThisRound.clear();
                     playersRaisedThisRound.addAll(raisedList);
                 }
             }
-            if (docSnapshot.contains("communityCards")) {
-                List<String> commCards = (List<String>) docSnapshot.get("communityCards");
+            if (doc.contains("communityCards")) {
+                List<String> commCards = (List<String>) doc.get("communityCards");
                 if (commCards != null) {
                     for (int i = 0; i < commCards.size(); i++) {
                         commViews[i].setImageResource(getResources().getIdentifier(Card.toImage(commCards.get(i)), "drawable", getPackageName()));
@@ -874,7 +861,7 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
 
-            String newGameId = docSnapshot.getString("newGameId");
+            String newGameId = doc.getString("newGameId");
             if (newGameId != null && !newGameId.isEmpty()) {
                 String oldGameID = gameId;
                 FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -900,9 +887,9 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
 
-            Boolean disp = docSnapshot.getBoolean("winnerDisplayed");
-            String winner = docSnapshot.getString("winnerUid");
-            Long award = docSnapshot.getLong("award");
+            Boolean disp = doc.getBoolean("winnerDisplayed");
+            String winner = doc.getString("winnerUid");
+            Long award = doc.getLong("award");
             if (Boolean.FALSE.equals(disp) && winner != null && award != null) {
                 gameRef.update("winnerDisplayed", true);
                 String text = "Winner - " + winner + "\n+ " + award + " chips";
@@ -943,9 +930,9 @@ public class GameActivity extends AppCompatActivity {
                             tv.setText(name);
 
                             if (foldedPlayers.contains(uid)) {
-                                tv.setAlpha(0.5f);
-                                betViews[index].setAlpha(0.5f);
-                                chipViews[index].setAlpha(0.5f);
+                                tv.setAlpha(0.4f);
+                                betViews[index].setAlpha(0.4f);
+                                chipViews[index].setAlpha(0.4f);
                             } else {
                                 tv.setAlpha(1f);
                                 betViews[index].setAlpha(1f);
@@ -953,7 +940,7 @@ public class GameActivity extends AppCompatActivity {
                             }
 
                             if (uid.equals(currentPlayerID)) {
-                                tv.setTextColor(Color.RED);
+                                tv.setTextColor(getResources().getColor(R.color.x, null));
                                 tv.setTypeface(null, Typeface.BOLD);
                             } else {
                                 tv.setTextColor(Color.BLACK);

@@ -76,10 +76,6 @@ public class GameResult {
             ranks.add(rank);
             suits.add(suit);
         }
-        if (ranks.size() != 7) {
-            throw new IllegalStateException(
-                    "Получено " + ranks.size() + " карт: " + cards7);
-        }
         Map<Integer, Integer> cnt = new HashMap<>();
         Map<Character, List<Integer>> bySuit = new HashMap<>();
         for (int i = 0; i < ranks.size(); i++) {

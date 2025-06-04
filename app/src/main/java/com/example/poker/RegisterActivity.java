@@ -2,15 +2,12 @@ package com.example.poker;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.*;
+import java.util.*;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import android.util.Log;
 import com.google.firebase.firestore.FirebaseFirestore;
-import java.util.*;
 
 public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
@@ -53,14 +50,7 @@ public class RegisterActivity extends AppCompatActivity {
                                 db.collection("users").document(userID).set(userData);
 
                                 Player pl = new Player(inName);
-                                db.collection("players").document(userID).set(pl)
-                                        .addOnSuccessListener(aVoid -> {
-                                            Log.d("CreatePlayer", "Player document created for UID: " + userID);
-                                        })
-                                        .addOnFailureListener(e -> {
-                                            Log.w("CreatePlayer", "Error adding player", e);
-                                            Toast.makeText(this, "Error creating player", Toast.LENGTH_SHORT).show();
-                                        });
+                                db.collection("players").document(userID).set(pl);
                             }
 
                             Toast.makeText(this, "Successful registration", Toast.LENGTH_SHORT).show();

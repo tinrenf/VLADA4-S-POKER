@@ -1,21 +1,19 @@
 package com.example.poker;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.widget.*;
-
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.auth.FirebaseAuth;
-
 import java.util.*;
 import android.content.*;
 import android.view.*;
 import android.widget.*;
+
+import android.os.Bundle;
+import android.text.InputFilter;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.auth.FirebaseUser;
-import android.text.InputFilter;
+
 
 public class CreateGameActivity extends AppCompatActivity {
 
