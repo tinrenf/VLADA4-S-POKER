@@ -3,7 +3,7 @@ package com.example.poker;
 import com.google.firebase.Timestamp;
 import java.util.*;
 
-public class Game { //Эта штука для firebase, когда в начале создаем игру
+public class Game { //Класс игры в firebase при создании
     private String id;
     private String creatorID;
     private List<String> playerIds;

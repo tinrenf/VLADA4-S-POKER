@@ -78,7 +78,7 @@
             android:text="Raise" />
     </LinearLayout>
 
-    <!-- Кнопка старт над количеством фишек -->
+    <!-- Кнопка старт -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/start_button"
         android:layout_width="wrap_content"

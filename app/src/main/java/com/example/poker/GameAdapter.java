@@ -1,15 +1,10 @@
 package com.example.poker;
 
-import android.content.Context;
-import android.content.Intent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.content.*;
+import android.view.*;
+import android.widget.*;
+import java.util.*;
 
-import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -17,14 +12,11 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.DocumentReference;
 
-import java.util.*;
-
 public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder> {
 
     private final List<Game> games;
     private final Context context;
     private final String currentUserUid;
-    TextView blindsInfo;
 
     public GameAdapter(List<Game> games, Context context) {
         this.games = games;
@@ -98,7 +90,7 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
             }
 
             if (game.getPlayerIds().size() >= game.getMaxPlayers()) {
-                Toast.makeText(context, "Игроков уже 5", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Max players", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -118,7 +110,7 @@ public class GameAdapter extends RecyclerView.Adapter<GameAdapter.GameViewHolder
                 gameRef.update(updates)
                         .addOnSuccessListener(aVoid -> goToGameActivity(game.getId()))
                         .addOnFailureListener(e ->
-                                Toast.makeText(context, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                         );
             });
         });

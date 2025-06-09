@@ -25,6 +25,4 @@ public class Player {
     public void setName(String name) { this.name = name; }
     public void setMoney(int money) { this.money = money; }
     public void setGameId(String gameId) { this.gameId = gameId; }
-
-    // какая-нибудь хуета
 }
