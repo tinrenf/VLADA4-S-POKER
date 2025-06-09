@@ -4,6 +4,7 @@
     <color name="white">#FFFFFFFF</color>
     <color name="green">#4CAF50</color>
     <color name="lightGreen">#66BB6A</color>
+    <color name="x">#D32F2F</color>
 
     <color name="primary">#FFB300</color>
     <color name="onPrimary">#1A1A1A</color>
