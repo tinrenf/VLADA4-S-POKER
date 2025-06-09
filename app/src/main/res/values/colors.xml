@@ -3,22 +3,23 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="green">#4CAF50</color>
+    <color name="lightGreen">#66BB6A</color>
 
-    <color name="primary">#2E3A4D</color>
-    <color name="onPrimary">#FFFFFF</color>
+    <color name="primary">#FFB300</color>
+    <color name="onPrimary">#1A1A1A</color>
     <color name="primaryContainer">#A5D6A7</color>
     <color name="onPrimaryContainer">#1B5E20</color>
 
-    <color name="secondary">#D4AF37</color>
-    <color name="onSecondary">#444444</color>
+    <color name="secondary">#8B1E3F</color>
+    <color name="onSecondary">#A0B9AE</color>
     <color name="secondaryContainer">#FFECB3</color>
     <color name="onSecondaryContainer">#5D4037</color>
 
-    <color name="error">#B00020</color>
+    <color name="error">#D32F2F</color>
     <color name="onError">#FFFFFF</color>
 
-    <color name="background">#2E7D32</color>
-    <color name="colorOnBackground">#000000</color>
-    <color name="surface">#FFECB3</color>
-    <color name="onSurface">#000000</color>
+    <color name="background">#103F2E</color>
+    <color name="colorOnBackground">#FFFFFF</color>
+    <color name="surface">#1E1E1E</color>
+    <color name="onSurface">#E0E0E0</color>
 </resources>

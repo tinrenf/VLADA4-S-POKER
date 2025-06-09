@@ -11,7 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Email"
-        android:inputType="textEmailAddress" />
+        android:inputType="textEmailAddress"
+        android:textColor="@color/colorOnBackground"/>
 
     <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/password"
@@ -19,7 +20,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:hint="Password"
-        android:inputType="textPassword" />
+        android:inputType="textPassword"
+        android:textColor="@color/colorOnBackground"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLogin"

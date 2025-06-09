@@ -15,29 +15,34 @@
         android:layout_height="wrap_content"
         android:text="Game Name"
         android:textStyle="bold"
-        android:textSize="18sp" />
+        android:textSize="18sp"
+        android:textColor="@color/colorOnBackground"/>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/host_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Host: ..." />
+        android:text="Host: ..."
+        android:textColor="@color/colorOnBackground"/>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/player_count"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Players: 0/5" />
+        android:text="Players: 0/5"
+        android:textColor="@color/colorOnBackground"/>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/player_names"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Players: ..." />
+        android:text="Players: ..."
+        android:textColor="@color/colorOnBackground"/>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/blinds_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Blinds: 50/25" />
+        android:text="Blinds: 50/25"
+        android:textColor="@color/colorOnBackground"/>
 </LinearLayout>

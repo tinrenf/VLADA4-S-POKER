@@ -21,14 +21,14 @@
             android:layout_width="88dp"
             android:layout_height="104dp"
             android:padding="11dp"
-            android:background="@drawable/avatar_background"
             android:scaleType="centerCrop">
 
             <ImageView
+                android:background="@color/colorOnBackground"
                 android:id="@+id/playerAvatar"
                 android:src="@drawable/avatar_default"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"/>
 
         </com.google.android.material.card.MaterialCardView>
 
@@ -43,6 +43,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Игрок"
+                android:textColor="@color/colorOnBackground"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -51,6 +52,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Chips: 0"
+                android:textColor="@color/colorOnBackground"
                 android:textSize="18sp" />
         </LinearLayout>
     </LinearLayout>

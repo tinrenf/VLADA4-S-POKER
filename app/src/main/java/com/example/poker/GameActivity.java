@@ -18,6 +18,8 @@ import android.widget.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import com.google.firebase.firestore.FieldValue;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
+
 import android.annotation.SuppressLint;
 
 public class GameActivity extends AppCompatActivity {
@@ -956,7 +958,7 @@ public class GameActivity extends AppCompatActivity {
                                 tv.setTextColor(Color.RED);
                                 tv.setTypeface(null, Typeface.BOLD);
                             } else {
-                                tv.setTextColor(Color.BLACK);
+                                tv.setTextColor(ContextCompat.getColor(this, R.color.colorOnBackground));
                                 tv.setTypeface(null, Typeface.NORMAL);
                             }
                         })
