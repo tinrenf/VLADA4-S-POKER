@@ -12,14 +12,14 @@ public class GameResult {
         private final List<String> playerIds;
         private final List<String> foldedPlayers;
         private final String gameName;
-        private final int big_blind;
-        public GameResult(String gameId, String creatorID, List<String> playerIds, List<String> foldedPlayers, String gameName, int big_blind) {
+        private final int pot;
+        public GameResult(String gameId, String creatorID, List<String> playerIds, List<String> foldedPlayers, String gameName, int pot) {
             this.gameId = gameId;
             this.creatorID = creatorID;
             this.playerIds = playerIds;
             this.foldedPlayers = foldedPlayers;
             this.gameName = gameName;
-            this.big_blind = big_blind;
+            this.pot = pot;
         }
     public void findWinnerUid() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -205,69 +205,43 @@ public class GameResult {
 
             Map<String, Object> gameUpdates = new HashMap<>();
 
-            Long pot = docSnapshot.getLong("pot");
-            if (pot == null) pot = 0L;
-
             final Map<String, Long> chips = new HashMap<>();
             Map<String, Long> fromDb = (Map<String, Long>) docSnapshot.get("chips");
             if (fromDb != null) {
                 chips.putAll(fromDb);
             }
 
-            Long newWinnerMoney = pot;
+            int newWinnerMoney = pot;
             for (Map.Entry<String, Long> e : chips.entrySet()) {
                 String uid = e.getKey();
                 Long moneyLong = e.getValue();
                 int money = moneyLong != null ? moneyLong.intValue() : 0;
                 if (uid.equals(winner)) {
-                    money += pot.intValue();
-                    newWinnerMoney = money * 1L;
+                    newWinnerMoney += money;
+                    money = newWinnerMoney;
                 }
                 FirebaseFirestore.getInstance().collection("players")
                         .document(uid).update("money", money);
             }
 
-            final int award = pot.intValue();
+            final int award = pot;
 
             db.collection("players").document(winner).get()
                     .addOnSuccessListener(doc -> {
-                        String winnerName = doc.getString("name");
-                        gameRef.update(
-                                "winnerUid", winnerName,
-                                "award", award,
-                                "winnerDisplayed", false
-                        );
+                        if (doc.exists()) {
+                            String winnerName = doc.getString("name");
+                            Map<String, Object> winnerEntry = new HashMap<>();
+                            winnerEntry.put("winnerUid", winnerName);
+                            winnerEntry.put("award", award);
+                            gameRef.update("winners", FieldValue.arrayUnion(winnerEntry));
+                            gameRef.update("winnerDisplayed", false);
+                        }
                     });
 
 
-            chips.put(winner, newWinnerMoney);
-            pot = 0L;
-            gameUpdates.put("pot", pot);
+            chips.put(winner, 1L * newWinnerMoney);
             gameUpdates.put("chips", chips);
             gameRef.update(gameUpdates);
-
-            DocumentReference oldGameRef = db.collection("games").document(gameId);
-            oldGameRef.get().addOnSuccessListener(doc -> {
-                if (!doc.exists()) return;
-
-                List<String> players = (List<String>) doc.get("playerIds");
-                Map<String, Object> newGame = new HashMap<>();
-                newGame.put("creatorID", creatorID);
-                newGame.put("playerIds", players);
-                newGame.put("maxPlayers", 5);
-                newGame.put("status", "waiting");
-                newGame.put("timestamp", FieldValue.serverTimestamp());
-                newGame.put("chips", doc.get("chips"));
-                newGame.put("bigBlind", big_blind);
-                newGame.put("name", gameName);
-
-                db.collection("games")
-                        .add(newGame)
-                        .addOnSuccessListener(newGameRef -> {
-                            String newGameId = newGameRef.getId();
-                            oldGameRef.update("newGameId", newGameId);
-                        });
-            });
         });
     }
 }

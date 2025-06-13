@@ -12,12 +12,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 
-import android.graphics.Color;
 import android.graphics.Typeface;
 import java.util.concurrent.atomic.AtomicInteger;
 import com.google.firebase.firestore.FieldValue;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
+import static java.lang.Math.min;
 
 import android.annotation.SuppressLint;
 
@@ -50,7 +50,18 @@ public class GameActivity extends AppCompatActivity {
     private List<String> playersRaisedThisRound = new ArrayList<>();
     private List<String> joinAfterStart = new ArrayList<>();
     private String gameName;
-
+    private int mainPot = 0;
+    private static class SidePot {
+        int amount;
+        Set<String> participants;
+        SidePot(int amount, Set<String> participants) {
+            this.amount = amount;
+            this.participants = new HashSet<>(participants);
+        }
+        public SidePot() {}
+    }
+    private List<SidePot> sidePots = new ArrayList<>();
+    Set<String> allInPlayers = new HashSet<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -137,7 +148,6 @@ public class GameActivity extends AppCompatActivity {
                         if (doc.contains("gameStarted") && Boolean.TRUE.equals(doc.get("gameStarted"))) {
                             return;
                         }
-
                         if (playerIds.size() <= 1) {
                             Toast.makeText(getApplicationContext(), "Нужно минимум 2 игрока для старта игры", Toast.LENGTH_SHORT).show();
                             return;
@@ -145,15 +155,49 @@ public class GameActivity extends AppCompatActivity {
 
                         String smallBlindPlayer = playerIds.get(0);
                         String bigBlindPlayer = playerIds.get(1);
-
                         DocumentReference gameRef = db.collection("games").document(gameId);
-
                         cur_rate = big_blind;
 
                         //основные штуки
                         gameRef.get().addOnSuccessListener(docSnapshot -> {
                             if (docSnapshot.exists()) {
-                                List<String> playerIds = (List<String>) docSnapshot.get("playerIds");
+                                List<String> ids = (List<String>) docSnapshot.get("playerIds");
+                                if (ids != null) {
+                                    playerIds.clear();
+                                    playerIds.addAll(ids);
+                                }
+
+                                Map<String, List<Card>> holeCards = PreFlop.deal(playerIds);
+                                // Карты у игроков на руках
+                                for (int i = 0; i < playerIds.size() && i < holeCardViews1.length; i++) {
+                                    List<Card> hand = holeCards.get(playerIds.get(i));
+                                    holeCardViews1[i].setImageResource(getResources().getIdentifier(Card.toImage(hand.get(0).toString()), "drawable", getPackageName()));
+                                    holeCardViews2[i].setImageResource(getResources().getIdentifier(Card.toImage(hand.get(1).toString()), "drawable", getPackageName()));
+                                }
+
+                                Map<String, Object> holeCardStrings = new HashMap<>();
+                                for (Map.Entry<String, List<Card>> entry : holeCards.entrySet()) {
+                                    String uid = entry.getKey();
+                                    List<Card> hand = entry.getValue();
+                                    List<String> stringHand = Arrays.asList(hand.get(0).toString(), hand.get(1).toString());
+                                    holeCardStrings.put(uid, stringHand);
+                                }
+
+                                deck = new ArrayList<>();
+                                int[] suits = {1, 2, 3, 4};
+                                for (int s : suits) {
+                                    for (int r = 2; r <= 14; r++) {
+                                        Card curCard = new Card(s, r);
+                                        deck.add(curCard.toString());
+                                    }
+                                }
+                                Collections.shuffle(deck);
+
+                                for (List<Card> hand : holeCards.values()) {
+                                    deck.remove(hand.get(0).toString());
+                                    deck.remove(hand.get(1).toString());
+                                }
+
                                 if (playerIds != null && !playerIds.isEmpty()) {
                                     if (playerIds.size() == 2) {
                                         currentPlayerID = playerIds.get(0);
@@ -170,88 +214,54 @@ public class GameActivity extends AppCompatActivity {
                                 playerBets.put(smallBlindPlayer, small_blind);
                                 playerBets.put(bigBlindPlayer, big_blind);
 
-                                updates.put("playerBets", playerBets);
                                 updates.put("status", "started");
                                 updates.put("currentPlayerID", currentPlayerID);
                                 updates.put("currentBet", cur_rate);
                                 updates.put("lastRaise", lastRaise);
-                                updates.put("pot", 0);
                                 updates.put("stage", "preflop");
+                                updates.put("holeCards", holeCardStrings);
+                                updates.put("deck", deck);
+                                updates.put("gameStarted", true);
 
                                 gameRef.update(updates);
                             }
                         });
 
-                        Map<String, List<Card>> holeCards = PreFlop.deal(playerIds);
-
-                        // Карты у игроков на руках
-                        for (int i = 0; i < playerIds.size() && i < holeCardViews1.length; i++) {
-                            List<Card> hand = holeCards.get(playerIds.get(i));
-                            holeCardViews1[i].setImageResource(getResources().getIdentifier(Card.toImage(hand.get(0).toString()), "drawable", getPackageName()));
-                            holeCardViews2[i].setImageResource(getResources().getIdentifier(Card.toImage(hand.get(1).toString()), "drawable", getPackageName()));
-                        }
-
-                        Map<String, Object> holeCardStrings = new HashMap<>();
-                        for (Map.Entry<String, List<Card>> entry : holeCards.entrySet()) {
-                            String uid = entry.getKey();
-                            List<Card> hand = entry.getValue();
-                            List<String> stringHand = Arrays.asList(hand.get(0).toString(), hand.get(1).toString());
-                            holeCardStrings.put(uid, stringHand);
-                        }
-
-                        deck = new ArrayList<>();
-                        int[] suits = {1, 2, 3, 4};
-                        for (int s : suits) {
-                            for (int r = 2; r <= 14; r++) {
-                                Card curCard = new Card(s, r);
-                                deck.add(curCard.toString());
-                            }
-                        }
-                        Collections.shuffle(deck);
-
-                        for (List<Card> hand : holeCards.values()) {
-                            deck.remove(hand.get(0).toString());
-                            deck.remove(hand.get(1).toString());
-                        }
-
-                        Map<String, Object> chips = new HashMap<>();
+                        Map<String, Long> chips = new HashMap<>();
                         AtomicInteger remaining = new AtomicInteger(playerIds.size());
                         for (String uid : playerIds) {
                             db.collection("players").document(uid).get()
                                     .addOnSuccessListener(doc1 -> {
-                                        if (doc1.exists()) {
-                                            Long money = doc1.getLong("money");
-                                            if (money != null) {
-                                                chips.put(uid, money);
-                                            } else {
-                                                chips.put(uid, 2525L);
-                                            }
-                                        } else {
-                                            chips.put(uid, 5252L);
-                                        }
+                                        Long money = doc1.exists() ? doc1.getLong("money") : null;
+                                        chips.put(uid, money != null ? money : 5252L);
 
                                         if (remaining.decrementAndGet() == 0) {
-                                            Object smallBlind = chips.get(smallBlindPlayer);
-                                            Object bigBlind = chips.get(bigBlindPlayer);
-                                            if (smallBlind instanceof Number && bigBlind instanceof Number) {
-                                                int newSmall = ((Number) smallBlind).intValue() - small_blind;
-                                                int newBig = ((Number) bigBlind).intValue() - big_blind;
-                                                chips.put(smallBlindPlayer, newSmall);
-                                                chips.put(bigBlindPlayer, newBig);
-                                            }
-                                            db.collection("games").document(gameId).update("chips", chips);
+
+                                            int sb = takeChips(smallBlindPlayer, small_blind, chips);
+                                            int bb = takeChips(bigBlindPlayer, big_blind, chips);
+
+                                            mainPot = sb + bb;
+                                            playerBets.put(smallBlindPlayer, sb);
+                                            playerBets.put(bigBlindPlayer, bb);
+
+                                            Map<String, Object> updates = new HashMap<>();
+                                            updates.put("status", "started");
+                                            updates.put("currentPlayerID", currentPlayerID);
+                                            updates.put("currentBet", cur_rate);
+                                            updates.put("lastRaise", lastRaise);
+                                            updates.put("stage", "preflop");
+                                            updates.put("pot", mainPot);
+                                            updates.put("playerBets", playerBets);
+                                            updates.put("chips", chips);
+
+                                            gameRef.update(updates)
+                                                    .addOnSuccessListener(a -> startButton.setVisibility(View.GONE))
+                                                    .addOnFailureListener(e ->
+                                                            Toast.makeText(this, "Ошибка старта игры", Toast.LENGTH_SHORT).show()
+                                                    );
                                         }
                                     });
                         }
-
-                        Map<String, Object> updates = new HashMap<>();
-                        updates.put("deck", deck);
-                        updates.put("holeCards", holeCardStrings);
-                        updates.put("gameStarted", true);
-                        updates.put("currentBet", cur_rate);
-                        updates.put("chips", chips);
-
-                        db.collection("games").document(gameId).update(updates);
                         startButton.setVisibility(View.GONE);
                     });
         });//Когда нажали на кнопку старт
@@ -268,16 +278,28 @@ public class GameActivity extends AppCompatActivity {
                 if (doc.exists()) {
                     Map<String, Long> chipsMap = (Map<String, Long>) doc.get("chips");
                     long curChips = chipsMap.get(currentPlayerID);
-                    Map<String, Object> rawMap = (Map<String, Object>) doc.get("playerBets");
+                    Map<String, Object> rawMap = (Map<String, Object>)doc.get("playerBets");
                     Map<String, Integer> playerBets = new HashMap<>();
                     if (rawMap != null) {
                         for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
-                            playerBets.put(entry.getKey(), ((Number) entry.getValue()).intValue());
+                            playerBets.put(entry.getKey(), ((Number)entry.getValue()).intValue());
                         }
                     }
+                    long maxActiveStack = 0;
+                    for (Map.Entry<String, Long> e : chipsMap.entrySet()) {
+                        String uid = e.getKey();
+                        long stack = e.getValue();
+                        if (!foldedPlayers.contains(uid) && stack > maxActiveStack) {
+                            maxActiveStack = stack;
+                        }
+                    }
+
                     int prevBet = playerBets.getOrDefault(currentUID, 0);
                     int minRaise = cur_rate + big_blind;
-                    int maxRaise = prevBet + (int)curChips;
+                    int maxRaise = prevBet + min((int)maxActiveStack, (int)curChips);
+                    int currentPot = ((Number) doc.get("pot")).intValue();
+                    mainPot = currentPot;
+                    sidePots.clear();
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle("Choose raise amount");
@@ -308,25 +330,49 @@ public class GameActivity extends AppCompatActivity {
                     builder.setView(layout);
 
                     builder.setPositiveButton("Raise", (dialog, which) -> {
-                        int raiseAmount = minRaise + seekBar.getProgress();
 
-                        if (curChips - (raiseAmount - prevBet) >= 0) {
-                            chipsMap.put(currentPlayerID, curChips - (raiseAmount - prevBet));
-                            playerBets.put(currentUID, raiseAmount);
-
-                            Map<String, Object> updates = new HashMap<>();
-                            updates.put("chips", chipsMap);
-                            updates.put("playerBets", playerBets);
-                            updates.put("currentBet", raiseAmount);
-                            updates.put("lastRaise", currentUID);
-                            updates.put("playersRaisedThisRound", playersRaisedThisRound);
-                            gameRef.update(updates);
-
-                            updatePotView();
-                            proceedToNextPlayer(false);
-                        } else {
-                            Toast.makeText(this, "Not enough chips to raise", Toast.LENGTH_SHORT).show();
+                        Map<String, Object> chipsRaw = (Map<String, Object>)doc.get("chips");
+                        Map<String, Long> chips = new HashMap<>();
+                        for (Map.Entry<String, Object> entry : chipsRaw.entrySet()) {
+                            if (entry.getValue() instanceof Number) {
+                                chips.put(entry.getKey(), ((Number) entry.getValue()).longValue());
+                            }
                         }
+
+                        int raiseAmount = minRaise + seekBar.getProgress();
+                        String uid = currentPlayerID;
+                        int prev = playerBets.getOrDefault(uid, 0);
+                        int want = raiseAmount - prev;
+                        int taken = takeChips(uid, want, chips);
+                        allocateToPot(uid, taken, chips);
+                        int newBet = prev + taken;
+                        playerBets.put(uid, newBet);
+
+                        if (chips.get(uid) == 0) {
+                            allInPlayers.add(uid);
+                        }
+                        List<String> allInPlayersList = new ArrayList<>(allInPlayers);
+
+                        cur_rate = newBet;
+                        lastRaise = uid;
+
+                        Map<String, Object> updates = new HashMap<>();
+                        updates.put("chips", chips);
+                        updates.put("playerBets", playerBets);
+                        updates.put("currentBet", cur_rate);
+                        updates.put("lastRaise", lastRaise);
+                        updates.put("pot", mainPot);
+                        updates.put("sidePots", serializeSidePots(sidePots));
+                        updates.put("allInPlayers", allInPlayersList);
+
+                        gameRef.update(updates)
+                                .addOnSuccessListener(aVoid -> {
+                                    updatePotView();
+                                    proceedToNextPlayer(false);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(this, "Ошибка при обновлении ставки", Toast.LENGTH_SHORT).show();
+                                });
                     });
                     builder.setNegativeButton("Cancel", null);
                     builder.show();
@@ -342,41 +388,62 @@ public class GameActivity extends AppCompatActivity {
             DocumentReference gameRef = db.collection("games").document(gameId);
 
             gameRef.get().addOnSuccessListener(doc -> {
-                if (doc.exists()) {
-                    Map<String, Object> rawMap = (Map<String, Object>) doc.get("playerBets");
-                    Map<String, Integer> playerBets = new HashMap<>();
-                    if (rawMap != null) {
-                        for (Map.Entry<String, Object> entry : rawMap.entrySet()) {
-                            playerBets.put(entry.getKey(), ((Number) entry.getValue()).intValue());
-                        }
-                    }
-                    int prevBet = playerBets.getOrDefault(currentPlayerID, 0);
-                    int toCall = cur_rate - prevBet;
+                if (!doc.exists()) return;
 
-                    if (toCall <= 0) {
-                        proceedToNextPlayer(false);
-                        return;
-                    }
-
-                    Map<String, Long> chipsMap = (Map<String, Long>) doc.get("chips");
-                    long currentChips = chipsMap.get(currentPlayerID);
-
-                    if (currentChips - toCall >= 0) {
-                        chipsMap.put(currentPlayerID, currentChips - toCall);
-                        playerBets.put(currentPlayerID, cur_rate);
-                        Map<String, Object> updates = new HashMap<>();
-                        updates.put("chips", chipsMap);
-                        updates.put("playerBets", playerBets);
-
-                        gameRef.update(updates);
-                        updatePotView();
-                        proceedToNextPlayer(false);
-                    } else {
-                        Toast.makeText(this, "Not enough chips to call", Toast.LENGTH_SHORT).show();
+                Map<String, Object> rawMap = (Map<String, Object>) doc.get("playerBets");
+                Map<String, Integer> playerBets = new HashMap<>();
+                if (rawMap != null) {
+                    for (Map.Entry<String, Object> e : rawMap.entrySet()) {
+                        playerBets.put(e.getKey(), ((Number) e.getValue()).intValue());
                     }
                 }
+
+                String uid = currentPlayerID;
+                int prevBet = playerBets.getOrDefault(uid, 0);
+                int toCall = cur_rate - prevBet;
+
+                if (toCall <= 0) {
+                    proceedToNextPlayer(false);
+                    return;
+                }
+
+                Map<String, Object> chipsRaw = (Map<String, Object>) doc.get("chips");
+                Map<String, Long> chips = new HashMap<>();
+                for (Map.Entry<String, Object> entry : chipsRaw.entrySet()) {
+                    if (entry.getValue() instanceof Number) {
+                        chips.put(entry.getKey(), ((Number) entry.getValue()).longValue());
+                    }
+                }
+
+                int taken = takeChips(uid, toCall, chips);
+                allocateToPot(uid, taken, chips);
+
+                int newBet = prevBet + taken;
+                playerBets.put(uid, newBet);
+
+                if (chips.get(uid) == 0) {
+                    allInPlayers.add(uid);
+                }
+                List<String> allInPlayersList = new ArrayList<>(allInPlayers);
+
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("chips", chips);
+                updates.put("playerBets", playerBets);
+                updates.put("pot", mainPot);
+                updates.put("sidePots", serializeSidePots(sidePots));
+                updates.put("allInPlayers", allInPlayersList);
+
+                gameRef.update(updates)
+                        .addOnSuccessListener(aVoid -> {
+                            updatePotView();
+                            proceedToNextPlayer(false);
+                        })
+                        .addOnFailureListener(e -> {
+                            Toast.makeText(this, "Ошибка при обновлении колла", Toast.LENGTH_SHORT).show();
+                        });
             });
         });
+
 
         foldButton.setOnClickListener(v -> {
             if (!currentUID.equals(currentPlayerID) || foldedPlayers.contains(currentPlayerID))
@@ -417,6 +484,70 @@ public class GameActivity extends AppCompatActivity {
             });
         });
     }
+
+    private int takeChips(String uid, int amount, Map<String, Long> chips) {
+        long have = chips.getOrDefault(uid, 0L);
+        int taken = (int)Math.min(have, amount);
+        chips.put(uid, have - taken);
+        return taken;
+    }
+    private void allocateToPot(String uid, int contribution, Map<String, Long> chips) {//Пока работает только наполовину
+        mainPot += contribution;
+
+        int playerTotal = getTotalContribution(uid);
+        int minAllIn = Integer.MAX_VALUE;
+
+        for (String p : chips.keySet()) {
+            if (!foldedPlayers.contains(p)) {
+                minAllIn = Math.min(minAllIn, getTotalContribution(p));
+            }
+        }
+
+        if (chips.get(uid) == 0 && playerTotal < minAllIn) {
+            int sideAmount = minAllIn - playerTotal;
+            Set<String> participants = getActivePlayers();
+            sidePots.add(new SidePot(sideAmount * participants.size(), participants));
+            mainPot -= sideAmount * participants.size();
+        }
+
+        List<Map<String, Object>> serializedPots = new ArrayList<>();
+        for (SidePot pot : sidePots) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("amount", pot.amount);
+            map.put("participants", pot.participants);
+            serializedPots.add(map);
+        }
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference gameRef = db.collection("games").document(gameId);
+        gameRef.update("sidePots", serializedPots);
+    }
+
+    private int getTotalContribution(String uid) {
+        return playerBets.getOrDefault(uid, 0);
+    }
+
+    private Set<String> getActivePlayers() {
+        Set<String> active = new HashSet<>();
+        for (String p : playerIds) {
+            if (!foldedPlayers.contains(p) && !joinAfterStart.contains(p) && !allInPlayers.contains(p)) {
+                active.add(p);
+            }
+        }
+        return active;
+    }
+
+    private List<Map<String, Object>> serializeSidePots(List<SidePot> sidePots) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (SidePot sp : sidePots) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("amount", sp.amount);
+            m.put("participants", new ArrayList<>(sp.participants));
+            out.add(m);
+        }
+        return out;
+    }
+
     @SuppressLint("MissingSuperCall")
     public void onBackPressed() {
         showLeaveConfirmationDialog();
@@ -476,8 +607,10 @@ public class GameActivity extends AppCompatActivity {
                     updates.put("lastRaise", lastRaise);
 
                     if (playerIds.size() == 1) {
-                        String winnerUid = playerIds.get(0);
-                    }//случай победы когда все вышли
+                        GameResult gameResult = new GameResult(gameId, creatorID, playerIds, foldedPlayers, gameName, mainPot);
+                        gameResult.findWinnerUid();
+                        createNewGame();
+                    }
 
                     gameRef.update(updates)
                             .addOnSuccessListener(aVoid -> {
@@ -613,8 +746,17 @@ public class GameActivity extends AppCompatActivity {
                 updates.put("stage", "river");
                 updates.put("communityCards", deck.subList(0, 5));
             } else {
-                GameResult gameResult = new GameResult(gameId, creatorID, playerIds, foldedPlayers, gameName, big_blind);
-                gameResult.findWinnerUid();
+                List<SidePot> allPots = new ArrayList<>();
+                allPots.add(new SidePot(mainPot, getActivePlayers()));
+                allPots.addAll(sidePots);
+
+                for (SidePot pot : allPots) {
+                    Set<String> participants = pot.participants;
+                    int money = pot.amount;
+                    GameResult gameResult = new GameResult(gameId, creatorID, new ArrayList<>(participants), foldedPlayers, gameName, money);
+                    gameResult.findWinnerUid();
+                }
+                createNewGame();
                 return;
             }
 
@@ -644,14 +786,8 @@ public class GameActivity extends AppCompatActivity {
             }
             cur_rate = 0;
             pot = ((Long) doc.get("pot")).intValue();
-            for (Object val : playerBets.values()) {
-                if (val instanceof Number) {
-                    pot += ((Number)val).intValue();
-                }
-            }
             playerBets.clear();
             updates.put("playerBets", playerBets);
-            updates.put("pot", pot);
             updates.put("currentBet", cur_rate);
 
             gameRef.update(updates);
@@ -678,9 +814,8 @@ public class GameActivity extends AppCompatActivity {
             List<String> foldedPlayers = (List<String>) doc.get("foldedPlayers");
             if (foldedPlayers == null) foldedPlayers = new ArrayList<>();
 
-            //след не скинувший карты. Менять, если меняем порядок игроков
             int loopStart = nextIndex;
-            while (foldedPlayers.contains(originalPlayerIds.get(nextIndex))) {
+            while (foldedPlayers.contains(originalPlayerIds.get(nextIndex)) || allInPlayers.contains(originalPlayerIds.get(nextIndex))) {
                 nextIndex = (nextIndex + 1) % originalPlayerIds.size();
                 if (nextIndex == loopStart) {
                     proceedToNextStage();
@@ -705,7 +840,9 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void updatePotView() {
-        potView.setText("Pot: " + pot);
+        int total = mainPot;
+        for (SidePot sp : sidePots) total += sp.amount;
+        potView.setText("Pot: " + total);
     }
 
     private void loadGameDetails(String gameId) {
@@ -804,7 +941,8 @@ public class GameActivity extends AppCompatActivity {
             }
 
             if (doc.contains("pot")) {
-                pot = ((Long) doc.get("pot")).intValue();
+                pot = ((Long)doc.get("pot")).intValue();
+                mainPot = pot;
                 updatePotView();
             }
 
@@ -830,7 +968,7 @@ public class GameActivity extends AppCompatActivity {
             }
 
             if (doc.contains("chips")) {
-                Map<String, Long> chipMap = (Map<String, Long>) doc.get("chips");
+                Map<String, Long> chipMap = (Map<String, Long>)doc.get("chips");
 
                 for (int i = 0; i < playerIds.size() && i < chipViews.length; i++) {
                     String uid = playerIds.get(i);
@@ -863,6 +1001,30 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
 
+            if (doc.contains("allInPlayers")) {
+                List<String> allInPlayersList = (List<String>) doc.get("allInPlayers");
+                if (allInPlayersList != null) {
+                    allInPlayers.clear();
+                    allInPlayers.addAll(allInPlayersList);
+                } else {
+                    allInPlayers.clear();
+                }
+            }
+
+            if (doc.contains("sidePots")) {
+                List<Map<String, Object>> potsFromDb = (List<Map<String, Object>>) doc.get("sidePots");
+                List<SidePot> loadedPots = new ArrayList<>();
+
+                if (potsFromDb != null) {
+                    for (Map<String, Object> potMap : potsFromDb) {
+                        int amount = ((Long) potMap.get("amount")).intValue();
+                        List<String> participants = (List<String>) potMap.get("participants");
+                        loadedPots.add(new SidePot(amount, new HashSet<>(participants)));
+                    }
+                    sidePots = loadedPots;
+                }
+            }
+
             String newGameId = doc.getString("newGameId");
             if (newGameId != null && !newGameId.isEmpty()) {
                 String oldGameID = gameId;
@@ -889,13 +1051,16 @@ public class GameActivity extends AppCompatActivity {
                 }
             }
 
+            List<Map<String, Object>> potWinners = (List<Map<String, Object>>) doc.get("winners");
             Boolean disp = doc.getBoolean("winnerDisplayed");
-            String winner = doc.getString("winnerUid");
-            Long award = doc.getLong("award");
-            if (Boolean.FALSE.equals(disp) && winner != null && award != null) {
+            if (Boolean.FALSE.equals(disp) && potWinners != null && !potWinners.isEmpty()) {
+                for (Map<String, Object> winnerEntry : potWinners) {
+                    String winner = (String)winnerEntry.get("winnerUid");
+                    Long award = (Long) winnerEntry.get("award");
+                    String text = "Winner - " + winner + "\n+ " + award + " chips";
+                    Toast.makeText(GameActivity.this, text, Toast.LENGTH_LONG).show();
+                }
                 gameRef.update("winnerDisplayed", true);
-                String text = "Winner - " + winner + "\n+ " + award + " chips";
-                Toast.makeText(GameActivity.this, text, Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -954,5 +1119,32 @@ public class GameActivity extends AppCompatActivity {
                 tv.setText(".");
             }
         }
+    }
+
+    private void createNewGame() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference oldGameRef = db.collection("games").document(gameId);
+
+        oldGameRef.get().addOnSuccessListener(doc -> {
+            if (!doc.exists()) return;
+
+            List<String> players = (List<String>) doc.get("playerIds");
+            Map<String, Object> newGame = new HashMap<>();
+            newGame.put("creatorID", creatorID);
+            newGame.put("playerIds", players);
+            newGame.put("maxPlayers", 5);
+            newGame.put("status", "waiting");
+            newGame.put("timestamp", FieldValue.serverTimestamp());
+            newGame.put("chips", doc.get("chips"));
+            newGame.put("bigBlind", big_blind);
+            newGame.put("name", gameName);
+
+            db.collection("games")
+                    .add(newGame)
+                    .addOnSuccessListener(newGameRef -> {
+                        String newGameId = newGameRef.getId();
+                        oldGameRef.update("newGameId", newGameId);
+                    });
+        });
     }
 }
